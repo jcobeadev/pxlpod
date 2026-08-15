@@ -34,6 +34,7 @@ export default function SessionLayout() {
       <Stack.Screen name="effect" />
       <Stack.Screen name="finish" />
       <Stack.Screen name="photos" />
+      <Stack.Screen name="delivery" />
     </Stack>
   );
 }

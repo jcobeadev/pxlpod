@@ -56,12 +56,7 @@ export default function YourPhotos() {
       </View>
 
       <View style={{ paddingHorizontal: 22, paddingBottom: insets.bottom + 12, gap: 8 }}>
-        <Button
-          label="Continue to sharing"
-          onPress={() => {
-            // TODO: delivery flow (14 Delivery hub) — not built yet.
-          }}
-        />
+        <Button label="Continue to sharing" onPress={() => router.push("/session/delivery")} />
         <Text style={{ fontSize: 12, color: colors.faint.DEFAULT, textAlign: "center" }}>
           Saved on this device · not uploaded
         </Text>
