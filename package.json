@@ -14,7 +14,9 @@
     "test": "turbo run test"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.112.3",
     "turbo": "^2.5.8",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
   }
 }
