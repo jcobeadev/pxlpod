@@ -1,0 +1,252 @@
+{
+  "single strip/SS-White.png": {
+    "canvas": {
+      "width": 1200,
+      "height": 1800
+    },
+    "windows": 4,
+    "layout": {
+      "rows": 2,
+      "cols": 2,
+      "mayBeDuplicateColumns": true
+    },
+    "slots": [
+      {
+        "id": "s1",
+        "photoIndex": 0,
+        "x": 79,
+        "y": 164,
+        "w": 509,
+        "h": 715,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s2",
+        "photoIndex": 1,
+        "x": 614,
+        "y": 164,
+        "w": 509,
+        "h": 715,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s3",
+        "photoIndex": 2,
+        "x": 79,
+        "y": 921,
+        "w": 509,
+        "h": 715,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s4",
+        "photoIndex": 3,
+        "x": 614,
+        "y": 921,
+        "w": 509,
+        "h": 715,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      }
+    ]
+  },
+  "double strip/DS-White.png": {
+    "canvas": {
+      "width": 1200,
+      "height": 1800
+    },
+    "windows": 8,
+    "layout": {
+      "rows": 4,
+      "cols": 2,
+      "mayBeDuplicateColumns": true
+    },
+    "slots": [
+      {
+        "id": "s1",
+        "photoIndex": 0,
+        "x": 47,
+        "y": 54,
+        "w": 532,
+        "h": 394,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 0.998
+      },
+      {
+        "id": "s2",
+        "photoIndex": 1,
+        "x": 621,
+        "y": 54,
+        "w": 531,
+        "h": 394,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s3",
+        "photoIndex": 2,
+        "x": 47,
+        "y": 472,
+        "w": 531,
+        "h": 393,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s4",
+        "photoIndex": 3,
+        "x": 621,
+        "y": 472,
+        "w": 531,
+        "h": 393,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s5",
+        "photoIndex": 4,
+        "x": 47,
+        "y": 935,
+        "w": 531,
+        "h": 393,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s6",
+        "photoIndex": 5,
+        "x": 621,
+        "y": 935,
+        "w": 531,
+        "h": 393,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s7",
+        "photoIndex": 6,
+        "x": 47,
+        "y": 1352,
+        "w": 531,
+        "h": 394,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      },
+      {
+        "id": "s8",
+        "photoIndex": 7,
+        "x": 621,
+        "y": 1352,
+        "w": 531,
+        "h": 394,
+        "shape": "rect",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 1.0
+      }
+    ]
+  },
+  "fish eye/2026-FS-SS-White.png": {
+    "canvas": {
+      "width": 1200,
+      "height": 1800
+    },
+    "windows": 4,
+    "layout": {
+      "rows": 2,
+      "cols": 2,
+      "mayBeDuplicateColumns": true
+    },
+    "slots": [
+      {
+        "id": "s1",
+        "photoIndex": 0,
+        "x": 43,
+        "y": 240,
+        "w": 544,
+        "h": 522,
+        "shape": "circle",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 0.795
+      },
+      {
+        "id": "s2",
+        "photoIndex": 1,
+        "x": 606,
+        "y": 240,
+        "w": 551,
+        "h": 522,
+        "shape": "circle",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 0.798
+      },
+      {
+        "id": "s3",
+        "photoIndex": 2,
+        "x": 43,
+        "y": 785,
+        "w": 544,
+        "h": 556,
+        "shape": "circle",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 0.79
+      },
+      {
+        "id": "s4",
+        "photoIndex": 3,
+        "x": 606,
+        "y": 785,
+        "w": 551,
+        "h": 556,
+        "shape": "circle",
+        "rotation": 0,
+        "fit": "cover",
+        "mirror": true,
+        "_fill": 0.787
+      }
+    ]
+  }
+}

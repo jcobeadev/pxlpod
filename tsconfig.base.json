@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "declaration": false,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@poplab/template-spec": ["packages/template-spec/src/index.ts"],
+      "@poplab/template-spec/*": ["packages/template-spec/src/*"],
+      "@poplab/tokens": ["packages/tokens/index.js"],
+      "@poplab/tokens/*": ["packages/tokens/*"],
+      "@poplab/db": ["packages/db/src/index.ts"],
+      "@poplab/db/*": ["packages/db/src/*"],
+      "@poplab/api": ["packages/api/src/index.ts"],
+      "@poplab/api/*": ["packages/api/src/*"]
+    }
+  }
+}
