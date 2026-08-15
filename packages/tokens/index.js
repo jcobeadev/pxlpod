@@ -5,8 +5,8 @@
 // Colour groups from the design file are given semantic names rather than
 // raw hex names:
 //   - ink / amber / canvas / ground: single brand + base colours
-//   - surface: elevated-surface scale (surface, surface-2 .. surface-6)
-//   - muted / faint / hairline: text & divider grey scale, each DEFAULT + 2
+//   - surface: elevated-surface scale (surface, surface-2 .. surface-7)
+//   - muted / faint / hairline: text & divider grey scale (muted has DEFAULT..3)
 
 const tokens = require("./tokens.json");
 

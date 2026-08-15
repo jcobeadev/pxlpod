@@ -24,6 +24,15 @@
         {
           "locationWhenInUsePermissionTextIOS": "PxlPod checks whether a pop-up is running near you, so it can offer prints."
         }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E0E0C",
+          "dark": {
+            "backgroundColor": "#0E0E0C"
+          }
+        }
       ]
     ],
     "ios": {

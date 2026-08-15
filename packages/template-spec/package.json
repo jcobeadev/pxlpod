@@ -13,5 +13,10 @@
   "devDependencies": {
     "typescript": "^5.9.3"
   },
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./layout": "./src/layout.ts"
+  }
 }
