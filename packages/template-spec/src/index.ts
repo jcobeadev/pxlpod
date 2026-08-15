@@ -6,5 +6,5 @@
  * renderers, one definition of where a slot sits.
  */
 
-export * from "./schema";
-export * from "./layout";
+export * from "./schema.ts";
+export * from "./layout.ts";

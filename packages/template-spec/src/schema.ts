@@ -56,10 +56,18 @@ export const SlotSchema = z.object({
   rotation: z.number().default(0),
   fit: SlotFit.default("cover"),
   /**
-   * Mirror the photo horizontally when drawing. Front-camera capture is already
-   * mirrored on screen; without this the printed strip reads back-to-front.
+   * Artistic horizontal flip for THIS window — e.g. a template that mirrors one
+   * pane against another. Defaults to false.
+   *
+   * This is not where selfie mirroring belongs. Whether a capture needs
+   * flipping depends on the camera it came from, not on the template: a
+   * front-camera frame must be flipped to match the mirrored preview the guest
+   * posed against, while a rear-camera or uploaded photo must not. That travels
+   * on the photo as `flipHorizontal` and is XORed with this flag at render
+   * time. Defaulting this to true — as an earlier revision did — flipped every
+   * photo in every template, and turned any text in shot back-to-front.
    */
-  mirror: z.boolean().default(true),
+  mirror: z.boolean().default(false),
 });
 export type Slot = z.infer<typeof SlotSchema>;
 

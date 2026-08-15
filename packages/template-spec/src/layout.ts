@@ -1,5 +1,5 @@
-import type { Canvas, Slot, Template } from "./schema";
-import { DIGITAL_SCALE } from "./schema";
+import type { Canvas, Slot, Template } from "./schema.ts";
+import { DIGITAL_SCALE } from "./schema.ts";
 
 /**
  * Layout maths shared by all three renderers.
@@ -91,9 +91,24 @@ export interface SlotDraw {
   mirror: boolean;
 }
 
+/** A captured frame handed to the compositor. */
+export interface SourcePhoto {
+  width: number;
+  height: number;
+  /**
+   * Draw this frame flipped horizontally.
+   *
+   * Set it for front-camera captures: the preview the guest posed against is
+   * mirrored, while the saved frame is not, so the strip only matches what they
+   * saw if it is flipped back. Rear-camera shots and uploads leave it false, or
+   * every sign and T-shirt in the picture comes out reversed.
+   */
+  flipHorizontal?: boolean;
+}
+
 export function planSlots(
   template: Pick<Template, "slots" | "canvas">,
-  photos: ReadonlyArray<{ width: number; height: number }>,
+  photos: ReadonlyArray<SourcePhoto>,
   target: RenderTarget = "print",
 ): SlotDraw[] {
   const scale = scaleFor(target);
@@ -116,7 +131,9 @@ export function planSlots(
         cornerRadius: slot.cornerRadius * scale,
       },
       rotation: slot.rotation,
-      mirror: slot.mirror,
+      // XOR: the camera's flip and the template's artistic flip cancel out when
+      // both are set, which is the behaviour a designer expects.
+      mirror: (photo.flipHorizontal ?? false) !== slot.mirror,
     };
   });
 }

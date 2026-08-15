@@ -67,7 +67,7 @@ const statements = TEMPLATES.map((t) => {
     cornerRadius: 0,
     rotation: 0,
     fit: "cover",
-    mirror: true,
+    mirror: false,
   }));
 
   const shotCount = new Set(slots.map((s) => s.photoIndex)).size;
