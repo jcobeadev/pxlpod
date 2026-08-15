@@ -26,3 +26,18 @@ minimumReleaseAgeExclude:
   - expo-dev-client@57.0.12
   - expo-dev-launcher@57.0.12
   - expo-dev-menu@57.0.12
+
+# Pin one React for the whole workspace.
+#
+# packages/api peers react rather than depending on it, but pnpm was still free
+# to satisfy react-native's `^19.2.0` peer with a NEWER 19.2.8 than the app's
+# own 19.2.3, giving the bundle two physical Reacts — and, keyed off those, two
+# copies of react-query. The QueryClientProvider then set context on one copy
+# while useQuery read it from the other, so every screen using a hook failed
+# with "No QueryClient set" despite the provider being right there in the tree.
+#
+# In pnpm 11 overrides live here, not in package.json's "pnpm" field, which is
+# silently ignored.
+overrides:
+  react: 19.2.3
+  react-dom: 19.2.3
