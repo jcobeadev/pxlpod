@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -40,6 +40,7 @@ function ShellHeader() {
   // adding insets.top the wordmark lands on top of the clock and the two round
   // buttons sit over the wifi and battery icons.
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   return (
     <View
@@ -63,24 +64,26 @@ function ShellHeader() {
         PXLPOD
       </Text>
       <View style={{ flexDirection: "row", gap: 10 }}>
-        <View
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            borderWidth: 1,
-            borderColor: colors.ink,
-          }}
-        />
-        <View
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            borderWidth: 1,
-            borderColor: colors.ink,
-          }}
-        />
+        {/* Left button: start a session — the shutter mark from the splash. */}
+        <Pressable
+          onPress={() => router.push("/session")}
+          accessibilityRole="button"
+          accessibilityLabel="Start session"
+          style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: colors.ink, alignItems: "center", justifyContent: "center" }}
+        >
+          <View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.ink }} />
+        </Pressable>
+        {/* Right button: More (about, settings, privacy). */}
+        <Pressable
+          onPress={() => router.push("/more")}
+          accessibilityRole="button"
+          accessibilityLabel="More"
+          style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: colors.ink, alignItems: "center", justifyContent: "center", gap: 2.5 }}
+        >
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.ink }} />
+          ))}
+        </Pressable>
       </View>
     </View>
   );
