@@ -8,15 +8,43 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermissionTextIOS": "PxlPod saves your finished strip to your photos.",
+          "photosPermissionTextIOS": "PxlPod needs access to save your photo strip.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermissionTextIOS": "PxlPod checks whether a pop-up is running near you, so it can offer prints."
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jcobea.pxlpod"
+      "bundleIdentifier": "com.jcobea.pxlpod",
+      "infoPlist": {
+        "NSCameraUsageDescription": "PxlPod uses your camera to take your photo strip.",
+        "NSPhotoLibraryAddUsageDescription": "PxlPod saves your finished strip to your photos.",
+        "NSLocationWhenInUseUsageDescription": "PxlPod checks whether a pop-up is running near you, so it can offer prints.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.jcobea.pxlpod",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#14140F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -26,6 +54,9 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {}
     }
   }
 }
