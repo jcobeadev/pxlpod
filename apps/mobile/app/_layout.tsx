@@ -81,6 +81,7 @@ export default function RootLayout() {
             {/* The capture flow — presented over the tabs so the tab bar is
                 hidden while shooting; the session store outlives each screen. */}
             <Stack.Screen name="session" options={{ presentation: "card", animation: "slide_from_right" }} />
+            <Stack.Screen name="strip/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
           </Stack>
         </QueryClientProvider>
       </PoplabClientContext.Provider>

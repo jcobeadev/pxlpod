@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,10 +6,11 @@ import * as MediaLibrary from "expo-media-library";
 import Share from "react-native-share";
 import { useLiveEvent } from "@poplab/api";
 
-import { Text, Button } from "../../src/components/ui";
+import { Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
 import { useSession } from "../../src/session/store";
 import { useComposite } from "../../src/session/useComposite";
+import { useLibrary } from "../../src/library/useLibrary";
 import { usePoplabClient } from "../_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
@@ -30,18 +31,38 @@ export default function DeliveryHub() {
   const client = usePoplabClient();
 
   const template = useSession((s) => s.template);
+  const filterId = useSession((s) => s.filterId);
+  const outputKind = useSession((s) => s.outputKind);
   const { uri, isComposing } = useComposite();
   const liveEventQuery = useLiveEvent(client, TENANT_ID);
   const liveEvent = liveEventQuery.data ?? null;
+  const commit = useLibrary((s) => s.commit);
 
   const [saving, setSaving] = useState(false);
+  const committed = useRef(false);
+
+  const ready = Boolean(uri) && !isComposing;
+
+  // Reaching delivery means the strip is finished — copy it into the on-device
+  // library (My Photos / Home) exactly once. Failure here must not block
+  // sharing, so it is swallowed.
+  useEffect(() => {
+    if (committed.current || !ready || !uri || !template) return;
+    committed.current = true;
+    void commit(uri, {
+      templateId: template.id,
+      templateName: template.name,
+      outputKind,
+      filterId,
+    }).catch(() => {
+      committed.current = false;
+    });
+  }, [ready, uri, template, outputKind, filterId, commit]);
 
   if (!template) {
     router.replace("/session");
     return null;
   }
-
-  const ready = Boolean(uri) && !isComposing;
 
   const onSave = async () => {
     if (!uri) return;

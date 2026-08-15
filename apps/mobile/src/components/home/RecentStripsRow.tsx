@@ -1,24 +1,46 @@
-import { View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { Text } from "../ui";
 import { colors } from "../../theme/tokens";
+import { useStrips } from "../../library/useLibrary";
 
 const ROW_HEIGHT = 126;
 
 /**
- * "Your recent strips" (04 Home). There is no local-session history source
- * to read from yet — only the empty state is built here, per the batch spec.
- * Scaled down from the full-screen empty pattern in "21b My photos empty"
- * (dashed frame + numbered slots) to fit inline as one row of the Home feed.
+ * "Your recent strips" (04 Home). Reads the on-device library: once a session
+ * finishes and its strip is committed, the newest few appear here as a
+ * horizontal row; before that, the dashed empty state from "21b My photos".
  */
 export function RecentStripsRow() {
+  const router = useRouter();
+  const { strips } = useStrips();
+  const recent = strips.slice(0, 6);
+
   return (
     <View style={{ gap: 12 }}>
-      <View style={{ marginHorizontal: 22 }}>
+      <View style={{ marginHorizontal: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <Text weight="bold" style={{ fontSize: 12, letterSpacing: 2.16, textTransform: "uppercase" }}>
           Your recent strips
         </Text>
+        {recent.length > 0 ? (
+          <Pressable onPress={() => router.push("/my-photos")} hitSlop={8}>
+            <Text weight="bold" style={{ fontSize: 12, letterSpacing: 1.6, textTransform: "uppercase", color: colors.muted.DEFAULT }}>See all</Text>
+          </Pressable>
+        ) : null}
       </View>
+
+      {recent.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 22 }}>
+          {recent.map((strip) => (
+            <Pressable key={strip.id} onPress={() => router.push(`/strip/${strip.id}`)}>
+              <View style={{ width: ROW_HEIGHT * (2 / 3), height: ROW_HEIGHT, backgroundColor: colors.surface["2"], borderWidth: 1, borderColor: colors.surface["3"] }}>
+                <Image source={{ uri: strip.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : (
       <View
         style={{
           marginHorizontal: 22,
@@ -59,6 +81,7 @@ export function RecentStripsRow() {
           </Text>
         </View>
       </View>
+      )}
     </View>
   );
 }
