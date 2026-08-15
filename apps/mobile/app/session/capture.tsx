@@ -100,22 +100,18 @@ export default function CaptureScreen() {
     if (!template) router.replace("/session");
   }, [template, router]);
 
-  const beginShot = useCallback(() => {
-    setPhase("getready");
+  // The get-ready beat is driven by the phase, not by the shot index. Whenever
+  // we land in "getready" and shots remain, wait ~1.4s then start the count.
+  // Everything else (capture done, review kept, retake) simply sets the phase
+  // back to "getready" and this runs the next beat — no path can stall.
+  useEffect(() => {
+    if (phase !== "getready" || photos.length >= shotCount) return;
     const t = setTimeout(() => {
       setRunNonce((n) => n + 1);
       setPhase("counting");
     }, 1400);
     return () => clearTimeout(t);
-  }, []);
-
-  // Kick off the first (and each subsequent) shot's get-ready beat.
-  useEffect(() => {
-    if (phase === "getready" && photos.length < shotCount) {
-      return beginShot();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentShot]);
+  }, [phase, photos.length, shotCount, runNonce]);
 
   const capture = useCallback(async () => {
     if (busy.current) return;
@@ -143,33 +139,32 @@ export default function CaptureScreen() {
       });
 
       setFlash(false);
-      if (settings.reviewEachShot) {
-        setPhase("review");
-      } else {
-        // straight through — the currentShot effect starts the next beat
-      }
+      // Review the shot, or (review off) drop straight back to "getready",
+      // which the beat effect picks up to start the next shot.
+      setPhase(settings.reviewEachShot ? "review" : "getready");
     } catch {
       setFlash(false);
       // Re-arm the same shot rather than losing the session on a transient
-      // capture error.
-      setPhase("getready");
+      // capture error. Bumping the nonce forces the beat effect to re-fire even
+      // though the phase is already "getready".
       setRunNonce((n) => n + 1);
-      setTimeout(() => setPhase("counting"), 800);
+      setPhase("getready");
     } finally {
       busy.current = false;
     }
   }, [photoOutput, settings, addPhoto]);
 
-  // Auto-advance the Keep/Retake beat.
+  // Auto-advance the Keep/Retake beat back into the next shot.
   useEffect(() => {
     if (phase !== "review") return;
-    const t = setTimeout(() => beginShot(), 1800);
+    const t = setTimeout(() => setPhase("getready"), 1800);
     return () => clearTimeout(t);
-  }, [phase, beginShot]);
+  }, [phase]);
 
   const onRetake = () => {
     retakeAt(photos.length - 1);
-    beginShot();
+    setRunNonce((n) => n + 1);
+    setPhase("getready");
   };
 
   const onClose = () => router.dismissAll?.() ?? router.replace("/(tabs)");
@@ -297,7 +292,7 @@ export default function CaptureScreen() {
             <Button label="Retake" variant="secondary" style={{ borderColor: colors.surface.DEFAULT }} onPress={onRetake} />
           </View>
           <View style={{ flex: 1 }}>
-            <Button label="Keep" onPress={() => beginShot()} />
+            <Button label="Keep" onPress={() => { setRunNonce((n) => n + 1); setPhase("getready"); }} />
           </View>
         </View>
       ) : null}
