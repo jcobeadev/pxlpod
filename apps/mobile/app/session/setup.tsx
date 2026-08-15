@@ -56,7 +56,11 @@ export default function SessionSetup() {
 
         <View style={{ marginTop: 8 }}>
           <ToggleRow label="Mirror preview" hint="Flip like a real mirror" value={settings.mirrorPreview} onChange={(mirrorPreview) => update({ mirrorPreview })} />
-          <ToggleRow label="Screen fill-light" hint="Brightens the screen while shooting" value={settings.fillLight} onChange={(fillLight) => update({ fillLight })} />
+          {settings.facing === "front" ? (
+            <ToggleRow label="Screen fill-light" hint="Brightens the screen while shooting" value={settings.fillLight} onChange={(fillLight) => update({ fillLight })} />
+          ) : (
+            <ToggleRow label="Flash" hint="Fire the rear camera flash on each shot" value={settings.rearFlash} onChange={(rearFlash) => update({ rearFlash })} />
+          )}
           <ToggleRow label="Countdown sound" value={settings.sound} onChange={(sound) => update({ sound })} />
           <ToggleRow label="Framing grid" value={settings.grid} onChange={(grid) => update({ grid })} />
           <ToggleRow label="Review each shot" hint="Keep or retake after every photo" value={settings.reviewEachShot} onChange={(reviewEachShot) => update({ reviewEachShot })} />

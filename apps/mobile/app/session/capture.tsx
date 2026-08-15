@@ -32,6 +32,16 @@ type Phase = "getready" | "counting" | "review";
 
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
 
+/** Condense VisionCamera's device name to a short lens tag for the HUD. */
+function lensLabel(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("ultra")) return "◉ ULTRA-WIDE";
+  if (n.includes("tele")) return "◉ TELEPHOTO";
+  if (n.includes("wide")) return "◉ WIDE";
+  if (n.includes("front")) return "◉ FRONT";
+  return `◉ ${name.toUpperCase()}`;
+}
+
 function measure(uri: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     Image.getSize(
@@ -61,7 +71,10 @@ export default function CaptureScreen() {
   const device = useCameraDevice(settings.facing, {
     physicalDevices: ["ultra-wide-angle", "wide-angle"],
   });
-  const photoOutput = usePhotoOutput({ qualityPrioritization: "quality" });
+  // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode — the
+  // "Could not decode image at …heic" failure on the assemble screen. JPEG is
+  // universally decodable and what the compositor expects.
+  const photoOutput = usePhotoOutput({ qualityPrioritization: "quality", containerFormat: "jpeg" });
 
   const [phase, setPhase] = useState<Phase>("getready");
   const [flash, setFlash] = useState(false);
@@ -108,11 +121,16 @@ export default function CaptureScreen() {
     if (busy.current) return;
     busy.current = true;
     try {
-      if (settings.fillLight) setFlash(true);
-      // Give the screen a frame to actually paint white before the shutter.
-      await new Promise((r) => setTimeout(r, settings.fillLight ? 120 : 0));
+      // Two kinds of "flash": the front camera has no hardware flash, so we
+      // flood the screen white; the rear camera fires its real flash.
+      const screenFlash = settings.facing === "front" && settings.fillLight;
+      const flashMode: "on" | "off" = settings.facing === "back" && settings.rearFlash ? "on" : "off";
 
-      const file = await photoOutput.capturePhotoToFile({ flashMode: "off" }, {});
+      if (screenFlash) setFlash(true);
+      // Give the screen a frame to actually paint white before the shutter.
+      await new Promise((r) => setTimeout(r, screenFlash ? 120 : 0));
+
+      const file = await photoOutput.capturePhotoToFile({ flashMode }, {});
       const uri = file.filePath.startsWith("file://") ? file.filePath : `file://${file.filePath}`;
       const { width, height } = await measure(uri);
 
@@ -222,10 +240,17 @@ export default function CaptureScreen() {
         }}
       >
         <RoundButton label="✕" onPress={onClose} />
-        <View style={{ backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 }}>
+        <View style={{ backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6, alignItems: "center" }}>
           <Text weight="bold" style={{ color: colors.surface.DEFAULT, fontSize: 13, letterSpacing: 0.5 }}>
             Shot {Math.min(shotNumber, shotCount)} / {shotCount}
           </Text>
+          {/* Which physical lens is live — lets us confirm the ultra-wide
+              ("fish-eye") is actually being reached on this device. */}
+          {device ? (
+            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, letterSpacing: 0.3 }} numberOfLines={1}>
+              {lensLabel(device.name)}
+            </Text>
+          ) : null}
         </View>
         <RoundButton
           label="⟲"

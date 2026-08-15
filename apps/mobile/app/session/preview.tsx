@@ -1,10 +1,11 @@
-import { Image, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { shotCount, type Variant } from "@poplab/template-spec/schema";
 
 import { Text, Button } from "../../src/components/ui";
 import { colors } from "../../src/theme";
+import { TemplateThumb } from "../../src/components/session/TemplateThumb";
 import { overlayUriFor } from "../../src/session/overlay";
 import { useSession } from "../../src/session/store";
 import { usePoplabClient } from "../_layout";
@@ -45,9 +46,7 @@ export default function TemplatePreview() {
 
       <View style={{ backgroundColor: colors.surface.DEFAULT, paddingHorizontal: 22, paddingTop: 18, paddingBottom: insets.bottom + 20, gap: 18 }}>
         <View style={{ flexDirection: "row", gap: 18 }}>
-          <View style={{ width: 104, aspectRatio: 2 / 3, backgroundColor: isDark ? colors.ground : "#ECE8DF", borderWidth: 1, borderColor: isDark ? colors.ground : colors.surface["3"] }}>
-            {uri ? <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" /> : null}
-          </View>
+          <TemplateThumb spec={template.spec} overlayUri={uri} dark={isDark} width={104} />
 
           <View style={{ flex: 1, gap: 10, paddingTop: 4 }}>
             <Text variant="display" style={{ fontSize: 24, textTransform: "uppercase", lineHeight: 25 }}>

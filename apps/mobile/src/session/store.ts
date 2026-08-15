@@ -37,8 +37,10 @@ export interface SessionSettings {
   facing: CameraFacing;
   /** Mirror the on-screen preview (front camera only; a real-mirror feel). */
   mirrorPreview: boolean;
-  /** Flash the screen white to light the subject in a dark venue. */
+  /** Flash the screen white to light the subject in a dark venue (front camera). */
   fillLight: boolean;
+  /** Fire the hardware flash on the rear camera. Front cameras have no flash. */
+  rearFlash: boolean;
   /** Play a countdown tick + shutter (best-effort; no-op until audio ships). */
   sound: boolean;
   /** Draw a thirds grid over the preview. */
@@ -52,6 +54,7 @@ export const DEFAULT_SETTINGS: SessionSettings = {
   facing: "front",
   mirrorPreview: true,
   fillLight: false,
+  rearFlash: false,
   sound: true,
   grid: false,
   reviewEachShot: true,

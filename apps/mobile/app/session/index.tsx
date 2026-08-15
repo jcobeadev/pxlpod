@@ -8,6 +8,7 @@ import { shotCount } from "@poplab/template-spec/schema";
 import { Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
 import { Chip } from "../../src/components/session/controls";
+import { TemplateThumb } from "../../src/components/session/TemplateThumb";
 import { overlayUriFor } from "../../src/session/overlay";
 import { useSession } from "../../src/session/store";
 import { usePoplabClient } from "../_layout";
@@ -58,11 +59,15 @@ export default function ChooseTemplate() {
         {"Choose a\ntemplate"}
       </Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 22, paddingBottom: 14 }}>
-        {FILTERS.map((f) => (
-          <Chip key={f.value} label={f.label} active={filter === f.value} onPress={() => setFilter(f.value)} />
-        ))}
-      </ScrollView>
+      {/* Fixed-height wrapper: a bare horizontal ScrollView in a flex column
+          stretches to fill the screen and drags the chips into tall pills. */}
+      <View style={{ height: 44, marginBottom: 14 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 22, alignItems: "center" }}>
+          {FILTERS.map((f) => (
+            <Chip key={f.value} label={f.label} active={filter === f.value} onPress={() => setFilter(f.value)} />
+          ))}
+        </ScrollView>
+      </View>
 
       {isPending ? (
         <Centered><Text style={{ color: colors.muted.DEFAULT }}>Loading templates…</Text></Centered>
@@ -107,9 +112,7 @@ function TemplateCard({
 
   return (
     <Pressable onPress={onPress} style={{ width: "47%", gap: 8 }}>
-      <View style={{ width: "100%", aspectRatio: 2 / 3, backgroundColor: isDark ? colors.ground : "#ECE8DF", borderWidth: 1, borderColor: isDark ? colors.ground : colors.surface["3"] }}>
-        {uri ? <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" /> : null}
-      </View>
+      <TemplateThumb spec={template.spec} overlayUri={uri} dark={isDark} />
       <View style={{ gap: 1 }}>
         <Text weight="bold" style={{ fontSize: 14 }} numberOfLines={1}>{template.name}</Text>
         <Text style={{ fontSize: 11.5, color: colors.muted.DEFAULT }} numberOfLines={1}>
