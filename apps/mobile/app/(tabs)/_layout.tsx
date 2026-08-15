@@ -1,6 +1,7 @@
 import { Pressable, View } from "react-native";
 import { Tabs } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName, Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
@@ -34,10 +35,17 @@ export default function TabsLayout() {
 }
 
 function ShellHeader() {
+  // The design canvas draws each screen at a flat 390x844 with no status bar, so
+  // its 58px header height is the bar BELOW the inset, not the total. Without
+  // adding insets.top the wordmark lands on top of the clock and the two round
+  // buttons sit over the wifi and battery icons.
+  const insets = useSafeAreaInsets();
+
   return (
     <View
       style={{
-        height: 58,
+        height: 58 + insets.top,
+        paddingTop: insets.top,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
