@@ -77,7 +77,7 @@ export default function HomeTab() {
           <LiveBanner eventTitle={liveEvent.title} onDismiss={() => setDismissedLiveEventId(liveEvent.id)} />
         ) : null}
 
-        <StartSessionHero />
+        <StartSessionHero onPress={() => router.push("/session")} />
 
         <TemplatesRow
           templates={templates}
