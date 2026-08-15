@@ -67,15 +67,14 @@ export function HomeOffline({ onRetry }: HomeOfflineProps) {
             onPress={onRetry}
             accessibilityRole="button"
             accessibilityLabel="Retry"
-            style={({ pressed }) => ({
+            style={{
               height: 44,
               borderWidth: 1,
               borderColor: colors.ink,
               alignItems: "center",
               justifyContent: "center",
               marginTop: 4,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
             <Text weight="bold" style={{ fontSize: 12, letterSpacing: 1.44, textTransform: "uppercase" }}>
               Retry

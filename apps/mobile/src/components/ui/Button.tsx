@@ -30,12 +30,17 @@ export function Button({ label, variant = "primary", disabled, style, ...rest }:
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
-      style={({ pressed }) => [
+      // Plain array, NOT `({ pressed }) => [...]`. NativeWind's style interop on
+      // core components drops a function `style` on this stack — the container
+      // styles never paint (see StartSessionHero). Press feedback via the
+      // pressed arg is sacrificed to keep every button actually rendering; a
+      // dedicated pressed treatment can return later without a function style.
+      style={[
         {
           height: HEIGHT[variant],
           alignItems: "center",
           justifyContent: "center",
-          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+          opacity: disabled ? 0.5 : 1,
         },
         variant === "primary" && { backgroundColor: colors.ink },
         variant === "secondary" && { borderWidth: 1, borderColor: colors.ink },

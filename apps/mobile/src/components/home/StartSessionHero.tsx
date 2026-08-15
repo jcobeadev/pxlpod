@@ -10,39 +10,50 @@ export interface StartSessionHeroProps {
 /**
  * "Start session" hero (04 Home). The session flow itself (05 Choose a
  * template onward) isn't built yet, so `onPress` is optional and this is
- * inert until a caller wires one up — pressing it does nothing rather than
- * routing to a screen that doesn't exist.
+ * inert until a caller wires one up.
+ *
+ * NOTE: the container styles live in a plain object, not a
+ * `({ pressed }) => [...]` function. On this stack (New Architecture, RN 0.86,
+ * React 19) a Pressable whose `style` is a function was dropping its container
+ * styles entirely — the dark box simply did not paint, leaving the bare amber
+ * shutter floating on white. Press feedback is done with the `opacity` prop
+ * instead, which is honoured. Every Pressable added here should follow suit.
  */
 export function StartSessionHero({ onPress }: StartSessionHeroProps) {
   return (
-    <View style={{ marginHorizontal: 22, gap: 10 }}>
+    <View style={{ marginHorizontal: 22, gap: 12 }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel="Start session"
-        style={({ pressed }) => [
-          {
-            height: 104,
-            backgroundColor: colors.ink,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 24,
-            opacity: pressed ? 0.85 : 1,
-          },
-        ]}
+        style={{
+          height: 116,
+          backgroundColor: colors.ink,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingLeft: 26,
+          paddingRight: 22,
+        }}
       >
         <Text
           variant="display"
-          style={{ fontSize: 30, lineHeight: 30, color: colors.surface.DEFAULT, textTransform: "uppercase" }}
+          style={{
+            fontSize: 32,
+            lineHeight: 31,
+            color: colors.surface.DEFAULT,
+            textTransform: "uppercase",
+          }}
         >
           {"Start\nsession"}
         </Text>
+
+        {/* Camera-shutter mark, echoing the splash aperture. */}
         <View
           style={{
-            width: 62,
-            height: 62,
-            borderRadius: 31,
+            width: 66,
+            height: 66,
+            borderRadius: 33,
             backgroundColor: colors.amber,
             alignItems: "center",
             justifyContent: "center",
@@ -50,16 +61,20 @@ export function StartSessionHero({ onPress }: StartSessionHeroProps) {
         >
           <View
             style={{
-              width: 26,
-              height: 26,
-              borderRadius: 13,
-              borderWidth: 3,
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              borderWidth: 3.5,
               borderColor: colors.ink,
             }}
           />
         </View>
       </Pressable>
-      <Text weight="medium" style={{ fontSize: 12, letterSpacing: 0.48, color: colors.muted.DEFAULT }}>
+
+      <Text
+        weight="medium"
+        style={{ fontSize: 12, letterSpacing: 0.4, color: colors.muted.DEFAULT }}
+      >
         4 shots · countdown · ~40 seconds
       </Text>
     </View>
