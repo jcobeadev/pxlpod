@@ -27,7 +27,7 @@ export default async function TemplatesPage() {
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Templates</p>
           <h1 className="font-display text-4xl uppercase mt-1">Template library</h1>
         </div>
-        <span className="text-[13px] text-[#7a736a]">{templates.length} templates</span>
+        <div className="flex items-center gap-4"><span className="text-[13px] text-[#7a736a]">{templates.length} templates</span><Link href="/templates/new" className="bg-[#14140f] text-white font-bold uppercase tracking-wide text-[13px] px-4 py-2.5">+ New template</Link></div>
       </div>
 
       {templates.length === 0 ? (
