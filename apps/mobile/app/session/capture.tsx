@@ -60,60 +60,68 @@ export default function CaptureScreen() {
 
   const { hasPermission, requestPermission } = useCameraPermission();
 
-  // Two separate physical lenses, because this iPhone's fused device won't zoom
-  // below 1x — the ultra-wide is only reachable by SELECTING it as its own
-  // device. getCameraDevice penalises extra lenses, so asking for exactly one
-  // physical type returns that single lens.
-  const wideDevice = useCameraDevice(settings.facing, { physicalDevices: ["wide-angle"] });
-  const ultraDevice = useCameraDevice(settings.facing, { physicalDevices: ["ultra-wide-angle"] });
-  const hasUltra = Boolean(ultraDevice && wideDevice && ultraDevice.id !== wideDevice.id);
-
-  // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode — the
-  // "Could not decode image at …heic" failure on the assemble screen.
+  // The fused device (ultra-wide + wide). On this hardware its zoom 1.0 IS the
+  // ultra-wide — the widest constituent lens — and 2.0 is the wide. So a single
+  // device plus a numeric zoom covers 0.5x / 1x / 2x; no lens swapping needed.
+  const device = useCameraDevice(settings.facing, {
+    physicalDevices: ["ultra-wide-angle", "wide-angle"],
+  });
+  // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode.
   const photoOutput = usePhotoOutput({ qualityPrioritization: "quality", containerFormat: "jpeg" });
 
-  // "0.5x" means the ultra-wide lens; "1x"/"2x" mean the wide lens zoomed.
-  const [lens, setLens] = useState<"ultra" | "wide">("wide");
-  const [wideZoom, setWideZoom] = useState(1); // digital zoom on the wide lens
+  // The reliable ultra-wide signal is lens COUNT, not device ids or names: the
+  // rear fused camera reports two physical lenses, the front reports one.
+  const physCount = device?.physicalDevices?.length ?? 0;
+  const hasUltra = settings.facing === "back" && physCount >= 2;
+  const minZoom = device?.minZoom ?? 1;
+  const maxZoom = Math.min(device?.maxZoom ?? 8, 8);
 
-  const useUltra = lens === "ultra" && hasUltra;
-  const device = useUltra ? ultraDevice : wideDevice;
-  const wideMin = wideDevice?.minZoom ?? 1;
-  const wideMax = Math.min(wideDevice?.maxZoom ?? 8, 8);
-  const activeZoom = useUltra ? (ultraDevice?.minZoom ?? 1) : wideZoom;
-
-  const zoomOptions: { key: string; label: string; onPress: () => void; active: boolean }[] = [
-    ...(hasUltra
-      ? [{ key: "ultra", label: "0.5×", onPress: () => setLens("ultra"), active: useUltra }]
-      : []),
-    { key: "1x", label: "1×", onPress: () => { setLens("wide"); setWideZoom(wideMin); }, active: !useUltra && wideZoom < wideMin * 1.5 },
-    { key: "2x", label: "2×", onPress: () => { setLens("wide"); setWideZoom(wideMin * 2); }, active: !useUltra && wideZoom >= wideMin * 1.5 },
-  ];
-
-  // Reset the lens choice when flipping front/back (front has no ultra-wide).
-  useEffect(() => {
-    setLens("wide");
-    setWideZoom(wideMin);
-  }, [settings.facing, wideMin]);
-
-  // Pinch fine-tunes the wide lens (1x → max). It doesn't drop to the ultra-wide
-  // — that's the 0.5x button — so pinching first switches to the wide lens.
+  // On the fused device the ultra-wide sits at minZoom (iOS 0.5x) and the wide
+  // at twice that (iOS 1x). Without an ultra-wide, minZoom is already 1x.
+  const [zoomValue, setZoomValue] = useState(1);
+  const zoomSV = useSharedValue(1); // mirror of zoomValue for the pinch worklet
   const zoomStartSV = useSharedValue(1);
+
+  const zoomOptions: { key: string; label: string; value: number; active: boolean }[] = (
+    hasUltra
+      ? [
+          { key: "0.5", label: "0.5×", value: minZoom },
+          { key: "1", label: "1×", value: minZoom * 2 },
+          { key: "2", label: "2×", value: minZoom * 4 },
+        ]
+      : [
+          { key: "1", label: "1×", value: minZoom },
+          { key: "2", label: "2×", value: minZoom * 2 },
+        ]
+  )
+    .filter((o) => o.value <= maxZoom + 0.001)
+    .map((o) => ({ ...o, active: Math.abs(zoomValue - o.value) < 0.05 }));
+
+  // Default to the wide (1x) — ultra-wide is a deliberate tap — and reset on flip.
+  useEffect(() => {
+    setZoomValue(hasUltra ? minZoom * 2 : minZoom);
+  }, [settings.facing, hasUltra, minZoom]);
+
+  useEffect(() => {
+    zoomSV.value = zoomValue;
+  }, [zoomValue, zoomSV]);
+
+  const jumpZoom = (v: number) => setZoomValue(v);
+
   const pinch = Gesture.Pinch()
     .onStart(() => {
-      zoomStartSV.value = 1;
-      runOnJS(setLens)("wide");
+      zoomStartSV.value = zoomSV.value;
     })
     .onUpdate((e) => {
-      const base = zoomStartSV.value === 1 ? wideMin : zoomStartSV.value;
-      const next = base * e.scale;
-      const clamped = next < wideMin ? wideMin : next > wideMax ? wideMax : next;
-      runOnJS(setWideZoom)(clamped);
+      const next = zoomStartSV.value * e.scale;
+      const clamped = next < minZoom ? minZoom : next > maxZoom ? maxZoom : next;
+      zoomSV.value = clamped;
+      runOnJS(setZoomValue)(clamped);
     });
 
   const debugLine =
-    `wide:${wideDevice?.id?.slice(0, 6) ?? "-"} ultra:${ultraDevice?.id?.slice(0, 6) ?? "-"} ` +
-    `hasUltra:${hasUltra ? "Y" : "N"} lens:${lens} z:${activeZoom.toFixed(2)}`;
+    `${device?.name ?? "-"} physN:${physCount} hasUltra:${hasUltra ? "Y" : "N"} ` +
+    `min:${minZoom.toFixed(2)} max:${maxZoom.toFixed(2)} z:${zoomValue.toFixed(2)}`;
 
   const [phase, setPhase] = useState<Phase>("getready");
   const [flash, setFlash] = useState(false);
@@ -223,7 +231,7 @@ export default function CaptureScreen() {
             device={device}
             isActive={phase !== "review"}
             outputs={[photoOutput]}
-            zoom={activeZoom}
+            zoom={zoomValue}
           />
         </GestureDetector>
       ) : (
@@ -318,7 +326,7 @@ export default function CaptureScreen() {
           {zoomOptions.map((opt) => (
             <Pressable
               key={opt.key}
-              onPress={opt.onPress}
+              onPress={() => jumpZoom(opt.value)}
               style={{
                 minWidth: 40,
                 height: 34,
