@@ -191,5 +191,14 @@ export const useSession = create<SessionState>((set, get) => ({
 
   setOutputKind: (kind) => set({ outputKind: kind }),
 
-  reset: () => set({ ...INITIAL, settings: DEFAULT_SETTINGS, photos: [], finishing: { caption: "", dateStamp: false, stickers: [] } }),
+  // Clears the per-session data (template, frames, filter, finishing) but KEEPS
+  // the guest's setup preferences — timer, camera, flash, sound, grid, review —
+  // so they carry across sessions instead of resetting to defaults each time.
+  reset: () =>
+    set((s) => ({
+      ...INITIAL,
+      settings: s.settings,
+      photos: [],
+      finishing: { caption: "", dateStamp: false, stickers: [] },
+    })),
 }));

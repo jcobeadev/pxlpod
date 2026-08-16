@@ -97,7 +97,11 @@ function ShellTabBar({ state, descriptors, navigation, insets }: BottomTabBarPro
       style={{
         flexDirection: "row",
         alignItems: "center",
-        height: 48 + bottomPadding,
+        // The icon + label + underline stack is ~48px; the old 48px inner height
+        // couldn't contain it, so the icons overflowed upward. Give the content
+        // real room (58px above the safe-area padding) and centre it.
+        height: 58 + bottomPadding,
+        paddingTop: 8,
         paddingHorizontal: 8,
         paddingBottom: bottomPadding,
         borderTopWidth: 1,
@@ -127,7 +131,7 @@ function ShellTabBar({ state, descriptors, navigation, insets }: BottomTabBarPro
             accessibilityRole="button"
             accessibilityState={focused ? { selected: true } : {}}
             accessibilityLabel={title ?? meta.label}
-            style={{ flex: 1, alignItems: "center", gap: 6 }}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 5 }}
           >
             <Icon name={meta.icon} active={focused} size={22} />
             <Text
