@@ -42,7 +42,7 @@ export default async function SharePage({ params }: { params: Promise<{ slug: st
         Download
       </a>
       <p className="text-[12px] text-white/50 text-center max-w-xs">
-        Made at a {name} photobooth. Want us at your event? Ask the booth.
+        Made at {name}. Want us at your event? Ask the booth.
       </p>
     </main>
   );
