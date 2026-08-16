@@ -5,6 +5,7 @@ import { saveContent } from "./actions";
 const BLOCKS = [
   { key: "about", label: "About PXLPOD", hint: "Shown on the app's More screen." },
   { key: "hero", label: "Home hero line", hint: "The tagline under Start session." },
+  { key: "messenger", label: "Messenger link", hint: "m.me link for the app's Book Us screen (e.g. https://m.me/YourPage). Leave blank to hide the button." },
 ];
 
 export default async function ContentPage() {

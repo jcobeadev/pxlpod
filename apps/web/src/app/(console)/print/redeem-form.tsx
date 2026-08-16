@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { publicUrl } from "../../../lib/storage";
 import { redeemPass, type RedeemState } from "./actions";
 
 /** W-14 Print station — enter a guest's code, record cash, redeem. */
@@ -32,6 +33,31 @@ export function RedeemForm() {
         <p className={`text-[14px] font-semibold px-3 py-2 ${state.ok ? "bg-[#e4f0e8] text-[#2e7d52]" : "bg-[#f7e6e0] text-[#a33418]"}`}>
           {state.message}
         </p>
+      ) : null}
+
+      {state.ok && state.renderPath ? (
+        <div className="bg-white text-[#14140f] p-4 flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={publicUrl("shares", state.renderPath)}
+            alt="Strip to print"
+            className="w-20 h-28 object-cover border border-[#d8d4ca]"
+          />
+          <div className="flex-1">
+            <p className="font-bold text-[15px]">Ready to print</p>
+            <p className="text-[12px] text-[#7a736a] mb-3">
+              Opens the full-size strip. Print it (⌘P / Ctrl+P) to your DNP RX1HS at 4×6.
+            </p>
+            <a
+              href={publicUrl("shares", state.renderPath)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#ffb81f] text-[#14140f] font-bold uppercase tracking-wide px-5 py-2.5 text-[13px]"
+            >
+              Open strip to print →
+            </a>
+          </div>
+        </div>
       ) : null}
     </form>
   );

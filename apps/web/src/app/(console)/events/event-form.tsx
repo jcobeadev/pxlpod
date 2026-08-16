@@ -33,7 +33,7 @@ export function EventForm({ values }: { values: EventFormValues }) {
   // falling back to the row being edited on first render.
   const back = state.values;
   return (
-    <form action={formAction} className="max-w-2xl flex flex-col gap-5">
+    <form key={state.nonce ?? "init"} action={formAction} className="max-w-2xl flex flex-col gap-5">
       {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
 
       <Field label="Title">

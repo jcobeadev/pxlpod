@@ -7,6 +7,7 @@ export interface RedeemState {
   ok?: boolean;
   message?: string;
   code?: string;
+  renderPath?: string;
 }
 
 /**
@@ -21,7 +22,7 @@ export async function redeemPass(_prev: RedeemState, formData: FormData): Promis
   const cashPesos = Number(formData.get("cash") ?? 0);
   if (!code) return { ok: false, message: "Enter a code." };
 
-  const { error } = await supabase.rpc("redeem_print_job", {
+  const { data, error } = await supabase.rpc("redeem_print_job", {
     p_tenant_id: staff.tenantId,
     p_code: code,
     p_cash_cents: Math.round((Number.isFinite(cashPesos) ? cashPesos : 0) * 100),
@@ -29,5 +30,10 @@ export async function redeemPass(_prev: RedeemState, formData: FormData): Promis
   if (error) return { ok: false, message: error.message, code };
 
   revalidatePath("/print");
-  return { ok: true, message: `Pass ${code} redeemed — print it now.`, code };
+  return {
+    ok: true,
+    message: `Pass ${code} redeemed — open the strip and print it.`,
+    code,
+    renderPath: (data as { render_path?: string } | null)?.render_path,
+  };
 }

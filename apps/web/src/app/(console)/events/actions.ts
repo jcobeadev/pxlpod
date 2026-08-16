@@ -35,9 +35,12 @@ export interface SubmittedEventValues {
 
 export interface SaveEventState {
   error?: string;
-  // Echoed back on error so React 19 (which resets a form action's fields on
-  // completion) repopulates them instead of wiping what the operator typed.
+  // Echoed back on error so the form can repopulate. React 19 resets a form
+  // action's fields on completion, and an uncontrolled input ignores a changed
+  // `defaultValue` after mount — so the form is remounted via `nonce` as its
+  // React key, forcing the echoed values to become the fresh initial values.
   values?: SubmittedEventValues;
+  nonce?: number;
 }
 
 /**
@@ -68,13 +71,16 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
     print_price: (formData.get("print_price") as string) ?? "",
   };
 
-  if (!title) return { error: "Title is required.", values: submitted };
-  if (!startsAt || !endsAt) return { error: "Start and end times are required.", values: submitted };
+  // A fresh nonce each time so the form remounts and re-seeds with `submitted`.
+  const fail = (error: string): SaveEventState => ({ error, values: submitted, nonce: Date.now() });
+
+  if (!title) return fail("Title is required.");
+  if (!startsAt || !endsAt) return fail("Start and end times are required.");
 
   const start = new Date(startsAt);
   const end = new Date(endsAt);
   if (!(end.getTime() > start.getTime())) {
-    return { error: "End time must be after the start time.", values: submitted };
+    return fail("End time must be after the start time.");
   }
 
   const printPricePesos = Number(formData.get("print_price") ?? 0);
@@ -93,12 +99,12 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
 
   if (id) {
     const { error } = await supabase.from("events").update(base).eq("id", id).eq("tenant_id", staff.tenantId);
-    if (error) return { error: `Couldn't save event: ${error.message}`, values: submitted };
+    if (error) return fail(`Couldn't save event: ${error.message}`);
   } else {
     // Slug is unique per tenant; a duplicate title would clash, so make it unique.
     const slug = `${slugify(title)}-${Date.now().toString(36).slice(-4)}`;
     const { error } = await supabase.from("events").insert({ ...base, tenant_id: staff.tenantId, slug });
-    if (error) return { error: `Couldn't create event: ${error.message}`, values: submitted };
+    if (error) return fail(`Couldn't create event: ${error.message}`);
   }
 
   revalidatePath("/events");

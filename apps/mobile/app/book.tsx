@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppContent } from "@poplab/api";
 
 import { Text, Button } from "../src/components/ui";
 import { DatePickerField } from "../src/components/DatePickerField";
@@ -9,7 +10,7 @@ import { colors } from "../src/theme";
 import { usePoplabClient } from "./_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
-const MESSENGER_URL = process.env.EXPO_PUBLIC_MESSENGER_URL ?? "";
+const MESSENGER_FALLBACK = (process.env.EXPO_PUBLIC_MESSENGER_URL ?? "").trim();
 
 /**
  * 28 Book us. An inquiry form that lands in the operator's console pipeline.
@@ -34,11 +35,17 @@ export default function BookUsScreen() {
   const [busy, setBusy] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
 
+  // Operators set the Messenger link in the console (Content → Messenger link);
+  // an env var is only a fallback for local testing.
+  const content = useAppContent(client, TENANT_ID);
+  const messengerFromConsole = (content.data?.messenger as { body?: string } | undefined)?.body?.trim();
+  const messengerUrl = messengerFromConsole || MESSENGER_FALLBACK;
+
   const openMessenger = async () => {
     try {
-      const ok = await Linking.canOpenURL(MESSENGER_URL);
+      const ok = await Linking.canOpenURL(messengerUrl);
       if (!ok) throw new Error("no handler");
-      await Linking.openURL(MESSENGER_URL);
+      await Linking.openURL(messengerUrl);
     } catch {
       Alert.alert("Couldn't open Messenger", "Please make sure Messenger is installed, or use the form below.");
     }
@@ -102,45 +109,44 @@ export default function BookUsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10}><Text style={{ fontSize: 20 }}>✕</Text></Pressable>
       </View>
 
-      <KeyboardAvoidingView
+      {/* automaticallyAdjustKeyboardInsets lets the OS inset the scroll content
+          exactly by the keyboard height — no manual padding, so no dead
+          whitespace above the keyboard the way KeyboardAvoidingView produced. */}
+      <ScrollView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={insets.top + 8}
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: insets.bottom + 32, gap: 14 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
       >
-        <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: insets.bottom + 120, gap: 14 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-        >
-          <Text style={{ fontSize: 14, color: colors.muted.DEFAULT }}>
-            Tell us about your event and we&apos;ll get back to you with a quote.
-          </Text>
+        <Text style={{ fontSize: 14, color: colors.muted.DEFAULT }}>
+          Tell us about your event and we&apos;ll get back to you with a quote.
+        </Text>
 
-          {MESSENGER_URL ? (
-            <Pressable
-              onPress={openMessenger}
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: colors.ink, paddingHorizontal: 16, paddingVertical: 14 }}
-            >
-              <View style={{ flex: 1 }}>
-                <Text weight="bold" style={{ fontSize: 15 }}>Chat on Messenger</Text>
-                <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT }}>Talk to us right now instead</Text>
-              </View>
-              <Text style={{ fontSize: 18, color: colors.ink }}>→</Text>
-            </Pressable>
-          ) : null}
+        {messengerUrl ? (
+          <Pressable
+            onPress={openMessenger}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: colors.ink, paddingHorizontal: 16, paddingVertical: 14 }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text weight="bold" style={{ fontSize: 15 }}>Chat on Messenger</Text>
+              <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT }}>Talk to us right now instead</Text>
+            </View>
+            <Text style={{ fontSize: 18, color: colors.ink }}>→</Text>
+          </Pressable>
+        ) : null}
 
-          <Field label="Your name" value={name} onChangeText={setName} placeholder="Juan dela Cruz" />
-          <Field label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
-          <Field label="Phone" value={phone} onChangeText={setPhone} placeholder="0917 000 0000" keyboardType="phone-pad" />
-          <Field label="Event type" value={eventType} onChangeText={setEventType} placeholder="Wedding, birthday, brand launch…" />
-          <DatePickerField label="Preferred date" value={date} onChange={setDate} placeholder="Pick a date" />
-          <Field label="Location" value={location} onChangeText={setLocation} placeholder="City / venue" />
-          <Field label="Guest count" value={guests} onChangeText={setGuests} placeholder="e.g. 100" keyboardType="number-pad" />
-          <Field label="Anything else?" value={notes} onChangeText={setNotes} placeholder="Tell us more…" multiline />
+        <Field label="Your name" value={name} onChangeText={setName} placeholder="Juan dela Cruz" />
+        <Field label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
+        <Field label="Phone" value={phone} onChangeText={setPhone} placeholder="0917 000 0000" keyboardType="phone-pad" />
+        <Field label="Event type" value={eventType} onChangeText={setEventType} placeholder="Wedding, birthday, brand launch…" />
+        <DatePickerField label="Preferred date" value={date} onChange={setDate} placeholder="Pick a date" />
+        <Field label="Location" value={location} onChangeText={setLocation} placeholder="City / venue" />
+        <Field label="Guest count" value={guests} onChangeText={setGuests} placeholder="e.g. 100" keyboardType="number-pad" />
+        <Field label="Anything else?" value={notes} onChangeText={setNotes} placeholder="Tell us more…" multiline />
 
-          <Button label={busy ? "Sending…" : "Send request"} onPress={submit} disabled={busy} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <Button label={busy ? "Sending…" : "Send request"} onPress={submit} disabled={busy} />
+      </ScrollView>
     </View>
   );
 }

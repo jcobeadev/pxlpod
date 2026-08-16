@@ -48,8 +48,13 @@ export default function PrintPass() {
           Show this at the booth
         </Text>
 
-        <View style={{ backgroundColor: colors.surface.DEFAULT, paddingVertical: 28, paddingHorizontal: 40, alignItems: "center", gap: 6 }}>
-          <Text variant="display" style={{ fontSize: 56, letterSpacing: 8, color: colors.ink }}>
+        <View style={{ alignSelf: "stretch", backgroundColor: colors.surface.DEFAULT, paddingVertical: 30, paddingHorizontal: 20, alignItems: "center" }}>
+          <Text
+            variant="display"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={{ fontSize: 52, letterSpacing: 6, color: colors.ink, textAlign: "center" }}
+          >
             {code}
           </Text>
         </View>

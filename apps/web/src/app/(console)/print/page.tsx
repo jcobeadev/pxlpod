@@ -37,7 +37,10 @@ export default async function PrintPage() {
         <RedeemForm />
       </div>
 
-      <h2 className="font-bold uppercase text-sm tracking-wide mb-3">Passes</h2>
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="font-bold uppercase text-sm tracking-wide">Passes</h2>
+        <span className="text-[12px] text-[#7a736a]">Click a strip to open it full size, then print (⌘P) to your DNP RX1HS.</span>
+      </div>
       <div className="bg-white border border-[#14140f]">
         {rows.length === 0 ? (
           <p className="px-5 py-10 text-center text-[#7a736a]">No print passes yet. They appear when a guest taps &ldquo;Print at this pop-up&rdquo;.</p>
@@ -49,8 +52,10 @@ export default async function PrintPage() {
               return (
                 <li key={j.id} className="flex items-center gap-4 px-5 py-3 border-b border-[#e3e0d7] last:border-0">
                   {j.render_path ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={publicUrl("shares", j.render_path)} alt="" className="w-10 h-14 object-cover bg-[#e8e8e5] border border-[#d8d4ca]" />
+                    <a href={publicUrl("shares", j.render_path)} target="_blank" rel="noopener noreferrer" title="Open full size to print">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={publicUrl("shares", j.render_path)} alt="" className="w-10 h-14 object-cover bg-[#e8e8e5] border border-[#d8d4ca] hover:border-[#14140f]" />
+                    </a>
                   ) : (
                     <div className="w-10 h-14 bg-[#e8e8e5]" />
                   )}
