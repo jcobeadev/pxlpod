@@ -78,8 +78,11 @@ function EventCard({ event }: { event: EventRow }) {
       <View style={{ flex: 1, gap: 3 }}>
         <Text weight="bold" style={{ fontSize: 16 }}>{event.title}</Text>
         <Text style={{ fontSize: 13, color: colors.muted.DEFAULT }}>{eventWhere(event)}</Text>
+        <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT }}>{eventWhen(event)}</Text>
         <View style={{ flexDirection: "row", gap: 6, marginTop: 3 }}>
-          {event.printing_enabled ? <Badge label="Prints" /> : null}
+          {event.printing_enabled ? (
+            <Badge label={event.print_price_cents > 0 ? `Prints ₱${(event.print_price_cents / 100).toFixed(0)}` : "Prints"} />
+          ) : null}
           <Badge label={event.ticket_url ? "Ticketed" : "Free"} />
         </View>
       </View>
@@ -99,8 +102,22 @@ function Note({ children }: { children: React.ReactNode }) {
   return <View style={{ padding: 40, alignItems: "center" }}><Text style={{ color: colors.muted.DEFAULT }}>{children}</Text></View>;
 }
 
-function eventWhere(event: { venue_name: string | null; city: string | null; starts_at: string; ends_at: string }): string {
-  const place = [event.venue_name, event.city].filter(Boolean).join(" · ");
-  const fmt = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  return place ? `${place} · ${fmt(event.starts_at)}–${fmt(event.ends_at)}` : `${fmt(event.starts_at)}–${fmt(event.ends_at)}`;
+function eventWhere(event: { venue_name: string | null; city: string | null }): string {
+  return [event.venue_name, event.city].filter(Boolean).join(" · ") || "Venue to be announced";
+}
+
+/**
+ * When the event runs, showing the end date too. Same-day events read as a time
+ * range ("6–10 PM"); multi-day events spell out both dates so an overnight or
+ * weekend pop-up is unambiguous.
+ */
+function eventWhen(event: { starts_at: string; ends_at: string }): string {
+  const start = new Date(event.starts_at);
+  const end = new Date(event.ends_at);
+  const time = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const date = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const sameDay = start.toDateString() === end.toDateString();
+  return sameDay
+    ? `${date(start)} · ${time(start)} – ${time(end)}`
+    : `${date(start)} ${time(start)} – ${date(end)} ${time(end)}`;
 }

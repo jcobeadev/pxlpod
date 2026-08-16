@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.15"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       album_photos: {
@@ -357,7 +332,7 @@ export type Database = {
           package?: string | null
           phone?: string | null
           preferred_date?: string | null
-          reference: string
+          reference?: string
           status?: Database["public"]["Enums"]["inquiry_status"]
           tenant_id: string
           updated_at?: string
@@ -805,15 +780,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_tenant_ids: { Args: never; Returns: string[] }
       generate_code: { Args: { len?: number }; Returns: string }
-      has_tenant_role: {
-        Args: {
-          allowed: Database["public"]["Enums"]["staff_role"][]
-          target: string
-        }
-        Returns: boolean
-      }
       issue_print_job: {
         Args: {
           p_created_by: string
@@ -1066,9 +1033,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       capture_surface: ["app", "web"],

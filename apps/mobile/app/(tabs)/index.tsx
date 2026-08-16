@@ -91,7 +91,7 @@ export default function HomeTab() {
 
         <UpcomingEvents events={upcomingEvents} />
 
-        <BookUsCta />
+        <BookUsCta onPress={() => router.push("/book")} />
       </ScrollView>
     </View>
   );
