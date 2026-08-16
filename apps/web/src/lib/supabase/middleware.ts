@@ -36,6 +36,9 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isLogin = pathname === "/login";
+  // Public surfaces: the shared-strip pages need no sign-in.
+  const isPublic = pathname.startsWith("/s/");
+  if (isPublic) return response;
 
   if (!user && !isLogin) {
     const url = request.nextUrl.clone();

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as MediaLibrary from "expo-media-library/legacy";
 import Share from "react-native-share";
 import { useLiveEvent } from "@poplab/api";
+import { createShareLink } from "../../src/session/shareLink";
 
 import { Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
@@ -94,6 +95,33 @@ export default function DeliveryHub() {
     }
   };
 
+  const [linking, setLinking] = useState(false);
+  const onCreateLink = async () => {
+    if (!uri) return;
+    Alert.alert(
+      "Create a share link?",
+      "This uploads your strip so anyone with the link can view it. It expires in 30 days.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Create link",
+          onPress: async () => {
+            setLinking(true);
+            try {
+              const { url } = await createShareLink(client, uri, TENANT_ID);
+              await Share.open({ message: url, failOnCancel: false }).catch(() => {});
+              Alert.alert("Link ready", url);
+            } catch (e) {
+              Alert.alert("Couldn't create link", e instanceof Error ? e.message : "Please try again.");
+            } finally {
+              setLinking(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const soon = (what: string) =>
     Alert.alert(what, "Lands in the next update, once the booth's delivery service is switched on.");
 
@@ -126,8 +154,7 @@ export default function DeliveryHub() {
           Coming with delivery
         </Text>
 
-        <Route label="Send by email or SMS" hint="From the booth's own address" onPress={() => soon("Send by email or SMS")} soon />
-        <Route label="Create a share link" hint="A branded page & QR to hand over" onPress={() => soon("Share link")} soon />
+        <Route label="Create a share link" hint="A branded page anyone can open" onPress={onCreateLink} disabled={!ready || linking} />
         {liveEvent ? (
           <Route
             label="Print at this pop-up"
