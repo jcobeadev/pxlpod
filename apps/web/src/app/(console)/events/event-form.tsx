@@ -1,4 +1,7 @@
-import { saveEvent } from "./actions";
+"use client";
+
+import { useActionState } from "react";
+import { saveEvent, type SaveEventState } from "./actions";
 
 export interface EventFormValues {
   id?: string;
@@ -21,10 +24,11 @@ function toLocalInput(iso?: string): string {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 16);
 }
 
-/** W-17 Event editor. Server-action form; works with JS off. */
+/** W-17 Event editor. Errors surface inline via useActionState. */
 export function EventForm({ values }: { values: EventFormValues }) {
+  const [state, formAction, pending] = useActionState<SaveEventState, FormData>(saveEvent, {});
   return (
-    <form action={saveEvent} className="max-w-2xl flex flex-col gap-5">
+    <form action={formAction} className="max-w-2xl flex flex-col gap-5">
       {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
 
       <Field label="Title">
@@ -68,9 +72,19 @@ export function EventForm({ values }: { values: EventFormValues }) {
         </Field>
       </div>
 
+      {state.error ? (
+        <p className="text-[14px] text-[#a33418] font-semibold border border-[#a33418] bg-[#f7e6e0] px-4 py-3">
+          {state.error}
+        </p>
+      ) : null}
+
       <div className="flex gap-3">
-        <button type="submit" className="bg-[#14140f] text-white font-bold uppercase tracking-wide px-6 py-3">
-          {values.id ? "Save changes" : "Create event"}
+        <button
+          type="submit"
+          disabled={pending}
+          className="bg-[#14140f] text-white font-bold uppercase tracking-wide px-6 py-3 disabled:opacity-50"
+        >
+          {pending ? "Saving…" : values.id ? "Save changes" : "Create event"}
         </button>
       </div>
     </form>
