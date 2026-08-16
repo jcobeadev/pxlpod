@@ -34,17 +34,6 @@ type Phase = "getready" | "counting" | "review";
 
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
 
-/**
- * Label a zoom value the way the iOS camera does, relative to the wide lens
- * (the "1x" reference). Below three-quarters of that is the ultra-wide, shown
- * as "0.5×".
- */
-function iosZoomLabel(z: number, wideRef: number): string {
-  const r = z / wideRef;
-  if (r < 0.75) return "0.5×";
-  return `${r % 1 === 0 ? r : r.toFixed(1)}×`;
-}
-
 function measure(uri: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     Image.getSize(
@@ -70,78 +59,61 @@ export default function CaptureScreen() {
   const shotCount = useSession((s) => s.shotCount());
 
   const { hasPermission, requestPermission } = useCameraPermission();
-  // Ask for the VIRTUAL multi-lens device (ultra-wide + wide), not the default
-  // single lens. getCameraDevice with no filter returns the default wide camera
-  // whose zoom bottoms out at 1x — the ultra-wide 0.5x is simply not in range.
-  // Listing both physical lenses returns the fused device that CAN zoom down to
-  // the ultra-wide.
-  const device = useCameraDevice(settings.facing, {
-    physicalDevices: ["ultra-wide-angle", "wide-angle"],
-  });
+
+  // Two separate physical lenses, because this iPhone's fused device won't zoom
+  // below 1x — the ultra-wide is only reachable by SELECTING it as its own
+  // device. getCameraDevice penalises extra lenses, so asking for exactly one
+  // physical type returns that single lens.
+  const wideDevice = useCameraDevice(settings.facing, { physicalDevices: ["wide-angle"] });
+  const ultraDevice = useCameraDevice(settings.facing, { physicalDevices: ["ultra-wide-angle"] });
+  const hasUltra = Boolean(ultraDevice && wideDevice && ultraDevice.id !== wideDevice.id);
+
   // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode — the
-  // "Could not decode image at …heic" failure on the assemble screen. JPEG is
-  // universally decodable and what the compositor expects.
+  // "Could not decode image at …heic" failure on the assemble screen.
   const photoOutput = usePhotoOutput({ qualityPrioritization: "quality", containerFormat: "jpeg" });
 
-  const minZoom = device?.minZoom ?? 1;
-  const maxZoom = Math.min(device?.maxZoom ?? 8, 8); // cap runaway digital zoom
-  // Whether this device carries an ultra-wide lens, so 0.5x is real. Two signals,
-  // because different iPhones report it differently: the device reporting a zoom
-  // floor below 1.0, OR one of its physical lenses naming itself "ultra".
-  const physicalNames = (device?.physicalDevices ?? [])
-    .map((d) => (typeof d === "string" ? d : (d?.name ?? "")))
-    .join(", ");
-  const hasUltraWide = minZoom < 0.95 || physicalNames.toLowerCase().includes("ultra");
-  // The zoom value that reads as "1x" in iOS terms. If the device reports a
-  // sub-1 floor, minZoom IS the 0.5x and 1x is at 1.0. Otherwise the ultra-wide
-  // (if any) is the widest and 1x sits at twice it.
-  const wideRef = minZoom < 0.95 ? 1 : hasUltraWide ? minZoom * 2 : minZoom;
-  const zoomOptions = [
-    hasUltraWide ? wideRef * 0.5 : wideRef,
-    wideRef,
-    wideRef * 2,
-  ]
-    .filter((z, i, a) => z >= minZoom - 0.001 && z <= maxZoom + 0.001 && a.indexOf(z) === i)
-    .map((z) => ({ value: z, label: iosZoomLabel(z, wideRef) }));
+  // "0.5x" means the ultra-wide lens; "1x"/"2x" mean the wide lens zoomed.
+  const [lens, setLens] = useState<"ultra" | "wide">("wide");
+  const [wideZoom, setWideZoom] = useState(1); // digital zoom on the wide lens
 
-  const debugLine =
-    `${device?.name ?? "no device"} | phys:[${physicalNames}] ` +
-    `| min ${minZoom.toFixed(2)} max ${maxZoom.toFixed(2)} | uw ${hasUltraWide ? "Y" : "N"} ref ${wideRef.toFixed(2)}`;
+  const useUltra = lens === "ultra" && hasUltra;
+  const device = useUltra ? ultraDevice : wideDevice;
+  const wideMin = wideDevice?.minZoom ?? 1;
+  const wideMax = Math.min(wideDevice?.maxZoom ?? 8, 8);
+  const activeZoom = useUltra ? (ultraDevice?.minZoom ?? 1) : wideZoom;
 
-  // Zoom is a plain number, NOT a reanimated SharedValue. Passing a SharedValue
-  // to <Camera zoom> makes VisionCamera read it on the render thread via
-  // react-native-vision-camera-worklets, which isn't in this build ("Cannot use
-  // Frame Processors — worklets is not installed"). A number avoids that path.
-  const [zoomLabel, setZoomLabel] = useState(1);
-  // Shared values drive only the pinch math on the UI thread; the result is
-  // mirrored to the number state for the Camera prop.
-  const zoomSV = useSharedValue(1);
-  const zoomStartSV = useSharedValue(1);
+  const zoomOptions: { key: string; label: string; onPress: () => void; active: boolean }[] = [
+    ...(hasUltra
+      ? [{ key: "ultra", label: "0.5×", onPress: () => setLens("ultra"), active: useUltra }]
+      : []),
+    { key: "1x", label: "1×", onPress: () => { setLens("wide"); setWideZoom(wideMin); }, active: !useUltra && wideZoom < wideMin * 1.5 },
+    { key: "2x", label: "2×", onPress: () => { setLens("wide"); setWideZoom(wideMin * 2); }, active: !useUltra && wideZoom >= wideMin * 1.5 },
+  ];
 
-  // Start at the widest the device offers (the 0.5x ultra-wide view where it
-  // exists) and reset when the lens set changes (front/back flip).
+  // Reset the lens choice when flipping front/back (front has no ultra-wide).
   useEffect(() => {
-    zoomSV.value = minZoom;
-    zoomStartSV.value = minZoom;
-    setZoomLabel(minZoom);
-  }, [minZoom, zoomSV, zoomStartSV]);
+    setLens("wide");
+    setWideZoom(wideMin);
+  }, [settings.facing, wideMin]);
 
+  // Pinch fine-tunes the wide lens (1x → max). It doesn't drop to the ultra-wide
+  // — that's the 0.5x button — so pinching first switches to the wide lens.
+  const zoomStartSV = useSharedValue(1);
   const pinch = Gesture.Pinch()
     .onStart(() => {
-      zoomStartSV.value = zoomSV.value;
+      zoomStartSV.value = 1;
+      runOnJS(setLens)("wide");
     })
     .onUpdate((e) => {
-      const next = zoomStartSV.value * e.scale;
-      const clamped = next < minZoom ? minZoom : next > maxZoom ? maxZoom : next;
-      zoomSV.value = clamped;
-      runOnJS(setZoomLabel)(clamped);
+      const base = zoomStartSV.value === 1 ? wideMin : zoomStartSV.value;
+      const next = base * e.scale;
+      const clamped = next < wideMin ? wideMin : next > wideMax ? wideMax : next;
+      runOnJS(setWideZoom)(clamped);
     });
 
-  const jumpZoom = (z: number) => {
-    const clamped = z < minZoom ? minZoom : z > maxZoom ? maxZoom : z;
-    zoomSV.value = clamped;
-    setZoomLabel(clamped);
-  };
+  const debugLine =
+    `wide:${wideDevice?.id?.slice(0, 6) ?? "-"} ultra:${ultraDevice?.id?.slice(0, 6) ?? "-"} ` +
+    `hasUltra:${hasUltra ? "Y" : "N"} lens:${lens} z:${activeZoom.toFixed(2)}`;
 
   const [phase, setPhase] = useState<Phase>("getready");
   const [flash, setFlash] = useState(false);
@@ -251,7 +223,7 @@ export default function CaptureScreen() {
             device={device}
             isActive={phase !== "review"}
             outputs={[photoOutput]}
-            zoom={zoomLabel}
+            zoom={activeZoom}
           />
         </GestureDetector>
       ) : (
@@ -343,28 +315,25 @@ export default function CaptureScreen() {
             padding: 5,
           }}
         >
-          {zoomOptions.map((opt) => {
-            const active = Math.abs(zoomLabel - opt.value) < 0.05;
-            return (
-              <Pressable
-                key={opt.value}
-                onPress={() => jumpZoom(opt.value)}
-                style={{
-                  minWidth: 40,
-                  height: 34,
-                  paddingHorizontal: 10,
-                  borderRadius: 17,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: active ? colors.surface.DEFAULT : "transparent",
-                }}
-              >
-                <Text weight="bold" style={{ fontSize: 12, color: active ? colors.ink : colors.surface.DEFAULT }}>
-                  {opt.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {zoomOptions.map((opt) => (
+            <Pressable
+              key={opt.key}
+              onPress={opt.onPress}
+              style={{
+                minWidth: 40,
+                height: 34,
+                paddingHorizontal: 10,
+                borderRadius: 17,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: opt.active ? colors.surface.DEFAULT : "transparent",
+              }}
+            >
+              <Text weight="bold" style={{ fontSize: 12, color: opt.active ? colors.ink : colors.surface.DEFAULT }}>
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       ) : null}
 
