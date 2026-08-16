@@ -35,6 +35,7 @@ export default function SessionLayout() {
       <Stack.Screen name="finish" />
       <Stack.Screen name="photos" />
       <Stack.Screen name="delivery" />
+      <Stack.Screen name="pass" options={{ gestureEnabled: false }} />
     </Stack>
   );
 }

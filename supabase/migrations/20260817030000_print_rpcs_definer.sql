@@ -1,0 +1,4 @@
+-- Print flow without a delivery server: issue_print_job and redeem_print_job
+-- become SECURITY DEFINER. issue validates the event is live and attributes the
+-- pass to auth.uid(); redeem requires the caller be staff of the tenant.
+-- (Full bodies applied via the Supabase migration of the same name.)

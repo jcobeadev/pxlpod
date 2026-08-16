@@ -544,7 +544,7 @@ export type Database = {
           id?: string
           render_path: string
           revoked_at?: string | null
-          slug: string
+          slug?: string
           tenant_id: string
           views?: number
         }
@@ -783,7 +783,6 @@ export type Database = {
       generate_code: { Args: { len?: number }; Returns: string }
       issue_print_job: {
         Args: {
-          p_created_by: string
           p_event_id: string
           p_render_path: string
           p_template_id: string
@@ -855,12 +854,7 @@ export type Database = {
         }[]
       }
       redeem_print_job: {
-        Args: {
-          p_cash_cents: number
-          p_code: string
-          p_redeemed_by: string
-          p_tenant_id: string
-        }
+        Args: { p_cash_cents: number; p_code: string; p_tenant_id: string }
         Returns: {
           cash_cents: number | null
           code: string

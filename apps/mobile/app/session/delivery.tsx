@@ -9,6 +9,7 @@ import * as MediaLibrary from "expo-media-library/legacy";
 import Share from "react-native-share";
 import { useLiveEvent } from "@poplab/api";
 import { createShareLink } from "../../src/session/shareLink";
+import { createPrintPass } from "../../src/session/printPass";
 
 import { Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
@@ -35,6 +36,7 @@ export default function DeliveryHub() {
   const client = usePoplabClient();
 
   const template = useSession((s) => s.template);
+  const variant = useSession((s) => s.variant);
   const filterId = useSession((s) => s.filterId);
   const outputKind = useSession((s) => s.outputKind);
   const { uri, isComposing } = useComposite();
@@ -122,8 +124,34 @@ export default function DeliveryHub() {
     );
   };
 
-  const soon = (what: string) =>
-    Alert.alert(what, "Lands in the next update, once the booth's delivery service is switched on.");
+  const [printing, setPrinting] = useState(false);
+  const onPrint = () => {
+    if (!uri || !liveEvent) return;
+    Alert.alert(
+      "Print at this pop-up?",
+      `₱${(liveEvent.print_price_cents / 100).toFixed(0)} per print, paid at the booth. This uploads your strip so staff can print it.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Get print code",
+          onPress: async () => {
+            setPrinting(true);
+            try {
+              const pass = await createPrintPass(client, uri, liveEvent.id, template?.id ?? null, variant?.label ?? null);
+              router.push({
+                pathname: "/session/pass",
+                params: { code: pass.code, price: String(pass.price_cents), expiresAt: pass.expires_at, event: liveEvent.title },
+              });
+            } catch (e) {
+              Alert.alert("Couldn't create print pass", e instanceof Error ? e.message : "Please try again.");
+            } finally {
+              setPrinting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   // Leave the whole capture flow and return Home. dismissAll() only pops the
   // session stack back to its first screen (Choose a template), which is why
@@ -146,23 +174,18 @@ export default function DeliveryHub() {
       </Text>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: insets.bottom + 24 }}>
-        <Route label="Save to device" hint="Stays offline — never uploaded" onPress={onSave} disabled={!ready || saving} primary />
-        <Route label="Share…" hint="Instagram, TikTok, Messenger" onPress={onShare} disabled={!ready} />
-
-        <View style={{ height: 1, backgroundColor: colors.surface["4"], marginVertical: 14 }} />
-        <Text weight="bold" style={{ fontSize: 10.5, letterSpacing: 1.6, textTransform: "uppercase", color: colors.faint.DEFAULT, marginBottom: 4 }}>
-          Coming with delivery
-        </Text>
-
-        <Route label="Create a share link" hint="A branded page anyone can open" onPress={onCreateLink} disabled={!ready || linking} />
         {liveEvent ? (
           <Route
             label="Print at this pop-up"
-            hint={`Live · ${liveEvent.title}`}
-            onPress={() => soon("Print at this pop-up")}
-            soon
+            hint={`Live · ${liveEvent.title} · ₱${(liveEvent.print_price_cents / 100).toFixed(0)}`}
+            onPress={onPrint}
+            disabled={!ready || printing}
+            primary
           />
         ) : null}
+        <Route label="Save to device" hint="Stays offline — never uploaded" onPress={onSave} disabled={!ready || saving} primary={!liveEvent} />
+        <Route label="Share…" hint="Instagram, TikTok, Messenger" onPress={onShare} disabled={!ready} />
+        <Route label="Create a share link" hint="A branded page anyone can open" onPress={onCreateLink} disabled={!ready || linking} />
       </ScrollView>
 
       <View style={{ paddingHorizontal: 22, paddingBottom: insets.bottom + 12 }}>
