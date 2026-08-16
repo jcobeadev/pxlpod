@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS, useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import { runOnJS, useSharedValue } from "react-native-reanimated";
 import {
   Camera,
   useCameraDevice,
@@ -96,35 +96,39 @@ export default function CaptureScreen() {
 
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 8, 8); // cap runaway digital zoom
-  const zoom = useSharedValue(1);
-  const zoomStart = useSharedValue(1);
+
+  // Zoom is a plain number, NOT a reanimated SharedValue. Passing a SharedValue
+  // to <Camera zoom> makes VisionCamera read it on the render thread via
+  // react-native-vision-camera-worklets, which isn't in this build ("Cannot use
+  // Frame Processors — worklets is not installed"). A number avoids that path.
   const [zoomLabel, setZoomLabel] = useState(1);
+  // Shared values drive only the pinch math on the UI thread; the result is
+  // mirrored to the number state for the Camera prop.
+  const zoomSV = useSharedValue(1);
+  const zoomStartSV = useSharedValue(1);
 
   // Start at the widest the device offers (the 0.5x ultra-wide view where it
   // exists) and reset when the lens set changes (front/back flip).
   useEffect(() => {
-    zoom.value = minZoom;
-    zoomStart.value = minZoom;
+    zoomSV.value = minZoom;
+    zoomStartSV.value = minZoom;
     setZoomLabel(minZoom);
-  }, [minZoom, zoom, zoomStart]);
-
-  useAnimatedReaction(
-    () => zoom.value,
-    (v) => runOnJS(setZoomLabel)(v),
-  );
+  }, [minZoom, zoomSV, zoomStartSV]);
 
   const pinch = Gesture.Pinch()
     .onStart(() => {
-      zoomStart.value = zoom.value;
+      zoomStartSV.value = zoomSV.value;
     })
     .onUpdate((e) => {
-      const next = zoomStart.value * e.scale;
-      zoom.value = next < minZoom ? minZoom : next > maxZoom ? maxZoom : next;
+      const next = zoomStartSV.value * e.scale;
+      const clamped = next < minZoom ? minZoom : next > maxZoom ? maxZoom : next;
+      zoomSV.value = clamped;
+      runOnJS(setZoomLabel)(clamped);
     });
 
   const jumpZoom = (z: number) => {
     const clamped = z < minZoom ? minZoom : z > maxZoom ? maxZoom : z;
-    zoom.value = clamped;
+    zoomSV.value = clamped;
     setZoomLabel(clamped);
   };
 
@@ -236,7 +240,7 @@ export default function CaptureScreen() {
             device={device}
             isActive={phase !== "review"}
             outputs={[photoOutput]}
-            zoom={zoom}
+            zoom={zoomLabel}
           />
         </GestureDetector>
       ) : (
