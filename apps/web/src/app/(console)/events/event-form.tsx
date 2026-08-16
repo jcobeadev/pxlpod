@@ -11,6 +11,9 @@ export interface EventFormValues {
   ends_at?: string;
   venue_name?: string | null;
   city?: string | null;
+  address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   is_published?: boolean;
   printing_enabled?: boolean;
   print_price_cents?: number;
@@ -56,6 +59,28 @@ export function EventForm({ values }: { values: EventFormValues }) {
         <Field label="City">
           <input name="city" defaultValue={back ? back.city : (values.city ?? "")} className={inputCls} placeholder="Manila" />
         </Field>
+      </div>
+
+      <div className="border border-[#d8d4ca] p-4 flex flex-col gap-3 bg-[#faf9f5]">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Location pin</span>
+          <p className="text-[12px] text-[#7a736a] mt-0.5">
+            Guests get a “Directions” button that opens Google Maps. Coordinates give the exact pin;
+            otherwise the address is searched. In Google Maps, right-click the spot → the first line is
+            “lat, lng” you can copy.
+          </p>
+        </div>
+        <Field label="Address">
+          <input name="address" defaultValue={back ? back.address : (values.address ?? "")} className={inputCls} placeholder="SM Megamall, Mandaluyong City" />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Latitude (optional)">
+            <input name="lat" inputMode="decimal" defaultValue={back ? back.lat : (values.lat != null ? String(values.lat) : "")} className={inputCls} placeholder="14.5859" />
+          </Field>
+          <Field label="Longitude (optional)">
+            <input name="lng" inputMode="decimal" defaultValue={back ? back.lng : (values.lng != null ? String(values.lng) : "")} className={inputCls} placeholder="121.0567" />
+          </Field>
+        </div>
       </div>
 
       <Field label="Description">

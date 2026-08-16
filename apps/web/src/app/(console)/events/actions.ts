@@ -27,6 +27,9 @@ export interface SubmittedEventValues {
   ends_at: string;
   venue_name: string;
   city: string;
+  address: string;
+  lat: string;
+  lng: string;
   description: string;
   is_published: boolean;
   printing_enabled: boolean;
@@ -65,6 +68,9 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
     ends_at: endsAt ?? "",
     venue_name: (formData.get("venue_name") as string) ?? "",
     city: (formData.get("city") as string) ?? "",
+    address: (formData.get("address") as string) ?? "",
+    lat: (formData.get("lat") as string) ?? "",
+    lng: (formData.get("lng") as string) ?? "",
     description: (formData.get("description") as string) ?? "",
     is_published: formData.get("is_published") === "on",
     printing_enabled: formData.get("printing_enabled") === "on",
@@ -85,6 +91,19 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
 
   const printPricePesos = Number(formData.get("print_price") ?? 0);
 
+  // Optional map pin. Blank → null; both must be valid numbers in range to be
+  // stored, otherwise the guest "Directions" link would open a broken pin.
+  const latRaw = (formData.get("lat") as string) ?? "";
+  const lngRaw = (formData.get("lng") as string) ?? "";
+  let lat: number | null = null;
+  let lng: number | null = null;
+  if (latRaw.trim() || lngRaw.trim()) {
+    lat = Number(latRaw);
+    lng = Number(lngRaw);
+    const ok = Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+    if (!ok) return fail("Latitude/longitude must be valid coordinates (e.g. 14.5859, 121.0567), or leave both blank.");
+  }
+
   const base = {
     title,
     description: (formData.get("description") as string) ?? "",
@@ -92,6 +111,9 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
     ends_at: end.toISOString(),
     venue_name: (formData.get("venue_name") as string) || null,
     city: (formData.get("city") as string) || null,
+    address: (formData.get("address") as string) || null,
+    lat,
+    lng,
     is_published: formData.get("is_published") === "on",
     printing_enabled: formData.get("printing_enabled") === "on",
     print_price_cents: Math.round((Number.isFinite(printPricePesos) ? printPricePesos : 0) * 100),

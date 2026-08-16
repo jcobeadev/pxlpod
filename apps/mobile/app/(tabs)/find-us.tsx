@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Linking, Pressable, ScrollView, View } from "react-native";
 import { useEvents, useLiveEvent, type EventRow } from "@poplab/api";
 
 import { Text } from "../../src/components/ui";
@@ -32,11 +32,14 @@ export default function FindUsTab() {
           <Text weight="bold" style={{ fontSize: 10.5, letterSpacing: 1.6, textTransform: "uppercase" }}>Live now</Text>
           <Text variant="display" style={{ fontSize: 20, marginTop: 2 }}>{liveEvent.title}</Text>
           <Text style={{ fontSize: 13, marginTop: 3 }}>{eventWhere(liveEvent)}</Text>
-          {liveEvent.printing_enabled ? (
-            <View style={{ alignSelf: "flex-start", marginTop: 8, backgroundColor: colors.ink, paddingHorizontal: 9, paddingVertical: 4 }}>
-              <Text weight="bold" style={{ fontSize: 10, letterSpacing: 0.5, color: colors.surface.DEFAULT }}>PRINTING AVAILABLE</Text>
-            </View>
-          ) : null}
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" }}>
+            {liveEvent.printing_enabled ? (
+              <View style={{ backgroundColor: colors.ink, paddingHorizontal: 9, paddingVertical: 4 }}>
+                <Text weight="bold" style={{ fontSize: 10, letterSpacing: 0.5, color: colors.surface.DEFAULT }}>PRINTING AVAILABLE</Text>
+              </View>
+            ) : null}
+            <DirectionsButton event={liveEvent} onDark />
+          </View>
         </View>
       ) : null}
 
@@ -79,15 +82,54 @@ function EventCard({ event }: { event: EventRow }) {
         <Text weight="bold" style={{ fontSize: 16 }}>{event.title}</Text>
         <Text style={{ fontSize: 13, color: colors.muted.DEFAULT }}>{eventWhere(event)}</Text>
         <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT }}>{eventWhen(event)}</Text>
-        <View style={{ flexDirection: "row", gap: 6, marginTop: 3 }}>
+        <View style={{ flexDirection: "row", gap: 6, marginTop: 3, alignItems: "center", flexWrap: "wrap" }}>
           {event.printing_enabled ? (
             <Badge label={event.print_price_cents > 0 ? `Prints ₱${(event.print_price_cents / 100).toFixed(0)}` : "Prints"} />
           ) : null}
           <Badge label={event.ticket_url ? "Ticketed" : "Free"} />
+          <DirectionsButton event={event} />
         </View>
       </View>
     </View>
   );
+}
+
+/**
+ * Opens the event's pin in Google Maps (or the OS default map app) externally —
+ * no location-tracking API, so no ongoing cost. Prefers the exact lat/lng pin
+ * the operator set; falls back to searching the venue/address text. Renders
+ * nothing when the event has no location at all.
+ */
+function DirectionsButton({ event, onDark }: { event: EventRow; onDark?: boolean }) {
+  const url = directionsUrl(event);
+  if (!url) return null;
+  const color = onDark ? colors.ink : colors.muted.DEFAULT;
+  return (
+    <Pressable
+      onPress={() => void Linking.openURL(url)}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`Directions to ${event.title}`}
+      style={{ borderWidth: 1, borderColor: onDark ? colors.ink : colors.surface["3"], paddingHorizontal: 8, paddingVertical: 2 }}
+    >
+      <Text weight="bold" style={{ fontSize: 10, letterSpacing: 0.4, color }}>Directions ↗</Text>
+    </Pressable>
+  );
+}
+
+function directionsUrl(event: {
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  venue_name: string | null;
+  city: string | null;
+}): string | null {
+  if (event.lat != null && event.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`;
+  }
+  const query = [event.venue_name, event.address, event.city].filter(Boolean).join(", ");
+  if (query) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  return null;
 }
 
 function Badge({ label }: { label: string }) {

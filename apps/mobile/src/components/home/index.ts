@@ -1,5 +1,6 @@
 export { LiveBanner } from "./LiveBanner";
 export { StartSessionHero } from "./StartSessionHero";
+export { StartSessionHeroVideo } from "./StartSessionHeroVideo";
 export { TemplatesRow } from "./TemplatesRow";
 export { RecentStripsRow } from "./RecentStripsRow";
 export { PastEventsRow } from "./PastEventsRow";

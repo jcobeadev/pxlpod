@@ -12,6 +12,7 @@ import {
   PortfolioRow,
   RecentStripsRow,
   StartSessionHero,
+  StartSessionHeroVideo,
   TemplatesRow,
   UpcomingEvents,
 } from "../../src/components/home";
@@ -19,6 +20,10 @@ import { colors } from "../../src/theme";
 import { usePoplabClient } from "../_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
+
+// Trial: show the looping-video Start-session tile instead of the flat one.
+// Flip to false to go back to the original.
+const USE_VIDEO_HERO = true;
 
 // 04 Home / 04b Home loading / 04c Home offline / 04d Home scrolled
 // (design/PXLPOD App.dc.html).
@@ -83,7 +88,11 @@ export default function HomeTab() {
           <LiveBanner eventTitle={liveEvent.title} onDismiss={() => setDismissedLiveEventId(liveEvent.id)} />
         ) : null}
 
-        <StartSessionHero onPress={() => router.push("/session")} caption={heroCaption} />
+        {USE_VIDEO_HERO ? (
+          <StartSessionHeroVideo onPress={() => router.push("/session")} caption={heroCaption} />
+        ) : (
+          <StartSessionHero onPress={() => router.push("/session")} caption={heroCaption} />
+        )}
 
         <TemplatesRow
           templates={templates}
