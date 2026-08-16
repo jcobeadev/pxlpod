@@ -13,6 +13,9 @@ import { useLibrary, useStrips } from "../src/library/useLibrary";
 import { usePoplabClient } from "./_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
+// Where the public legal pages live. For a store build this must be a real
+// hosted domain (App Store & Play both require a reachable privacy URL).
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? "https://pxlpod.app";
 
 /**
  * The "More" section — About (29), the useful bits of Settings (30), and the
@@ -83,9 +86,14 @@ export default function MoreScreen() {
           <Row label="App version" value={APP_VERSION} />
         </Section>
 
-        <Pressable onPress={() => void Linking.openURL("https://pxlpod.example/privacy")} style={{ marginTop: 6 }}>
-          <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT, textDecorationLine: "underline" }}>Full privacy policy</Text>
-        </Pressable>
+        <View style={{ flexDirection: "row", gap: 18, marginTop: 6 }}>
+          <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/privacy`)}>
+            <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT, textDecorationLine: "underline" }}>Privacy policy</Text>
+          </Pressable>
+          <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/terms`)}>
+            <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT, textDecorationLine: "underline" }}>Terms of use</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );

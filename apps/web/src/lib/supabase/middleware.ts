@@ -36,8 +36,9 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isLogin = pathname === "/login";
-  // Public surfaces: the shared-strip pages need no sign-in.
-  const isPublic = pathname.startsWith("/s/");
+  // Public surfaces: the shared-strip pages and the legal pages (privacy policy
+  // is the store-required URL the app links to) need no sign-in.
+  const isPublic = pathname.startsWith("/s/") || pathname === "/privacy" || pathname === "/terms";
   if (isPublic) return response;
 
   if (!user && !isLogin) {

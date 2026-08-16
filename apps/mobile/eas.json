@@ -36,7 +36,14 @@
   "submit": {
     "production": {
       "ios": {
-        "appleTeamId": "53HHS3Z88H"
+        "appleTeamId": "53HHS3Z88H",
+        "appleId": "APPLE_ID_EMAIL_HERE",
+        "ascAppId": "APP_STORE_CONNECT_APP_ID_HERE"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }
