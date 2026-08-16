@@ -1,5 +1,5 @@
-import { File } from "expo-file-system";
 import type { PoplabClient } from "@poplab/api";
+import { readFileForUpload } from "./upload";
 
 /**
  * Create a public share link for a finished strip, with no server round-trip.
@@ -26,8 +26,8 @@ export async function createShareLink(client: PoplabClient, localUri: string, te
   const slug = randomSlug();
   const path = `${uid}/${slug}.jpg`;
 
-  const bytes = new File(localUri).bytes();
-  const { error: upErr } = await client.storage.from("shares").upload(path, bytes, {
+  const body = await readFileForUpload(localUri);
+  const { error: upErr } = await client.storage.from("shares").upload(path, body, {
     contentType: "image/jpeg",
     upsert: false,
   });

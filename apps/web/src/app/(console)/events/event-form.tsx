@@ -27,46 +27,51 @@ function toLocalInput(iso?: string): string {
 /** W-17 Event editor. Errors surface inline via useActionState. */
 export function EventForm({ values }: { values: EventFormValues }) {
   const [state, formAction, pending] = useActionState<SaveEventState, FormData>(saveEvent, {});
+
+  // On a failed submit React 19 resets the form to its defaultValues, so those
+  // defaults must reflect what the operator just typed (echoed back in state),
+  // falling back to the row being edited on first render.
+  const back = state.values;
   return (
     <form action={formAction} className="max-w-2xl flex flex-col gap-5">
       {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
 
       <Field label="Title">
-        <input name="title" required defaultValue={values.title} className={inputCls} placeholder="Downtown Night Market" />
+        <input name="title" required defaultValue={back ? back.title : values.title} className={inputCls} placeholder="Downtown Night Market" />
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Starts">
-          <input type="datetime-local" name="starts_at" required defaultValue={toLocalInput(values.starts_at)} className={inputCls} />
+          <input type="datetime-local" name="starts_at" required defaultValue={back ? back.starts_at : toLocalInput(values.starts_at)} className={inputCls} />
         </Field>
         <Field label="Ends">
-          <input type="datetime-local" name="ends_at" required defaultValue={toLocalInput(values.ends_at)} className={inputCls} />
+          <input type="datetime-local" name="ends_at" required defaultValue={back ? back.ends_at : toLocalInput(values.ends_at)} className={inputCls} />
         </Field>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Venue">
-          <input name="venue_name" defaultValue={values.venue_name ?? ""} className={inputCls} placeholder="Downtown Night Market" />
+          <input name="venue_name" defaultValue={back ? back.venue_name : (values.venue_name ?? "")} className={inputCls} placeholder="Downtown Night Market" />
         </Field>
         <Field label="City">
-          <input name="city" defaultValue={values.city ?? ""} className={inputCls} placeholder="Manila" />
+          <input name="city" defaultValue={back ? back.city : (values.city ?? "")} className={inputCls} placeholder="Manila" />
         </Field>
       </div>
 
       <Field label="Description">
-        <textarea name="description" defaultValue={values.description} rows={3} className={inputCls} />
+        <textarea name="description" defaultValue={back ? back.description : values.description} rows={3} className={inputCls} />
       </Field>
 
       <div className="border border-[#d8d4ca] p-4 flex flex-col gap-3 bg-[#faf9f5]">
-        <Check name="is_published" label="Published" hint="Show this event in the app's Find Us list" defaultChecked={values.is_published} />
-        <Check name="printing_enabled" label="Printing available" hint="Let guests claim a print at this pop-up" defaultChecked={values.printing_enabled} />
+        <Check name="is_published" label="Published" hint="Show this event in the app's Find Us list" defaultChecked={back ? back.is_published : values.is_published} />
+        <Check name="printing_enabled" label="Printing available" hint="Let guests claim a print at this pop-up" defaultChecked={back ? back.printing_enabled : values.printing_enabled} />
         <Field label="Print price (₱)">
           <input
             type="number"
             name="print_price"
             min={0}
             step={5}
-            defaultValue={((values.print_price_cents ?? 0) / 100).toString()}
+            defaultValue={back ? back.print_price : ((values.print_price_cents ?? 0) / 100).toString()}
             className={`${inputCls} w-32`}
           />
         </Field>

@@ -21,8 +21,23 @@ function slugify(s: string): string {
  * the form. Errors are surfaced (thrown) rather than swallowed: an insert that
  * silently failed is exactly why "add event" looked like it did nothing.
  */
+export interface SubmittedEventValues {
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  venue_name: string;
+  city: string;
+  description: string;
+  is_published: boolean;
+  printing_enabled: boolean;
+  print_price: string;
+}
+
 export interface SaveEventState {
   error?: string;
+  // Echoed back on error so React 19 (which resets a form action's fields on
+  // completion) repopulates them instead of wiping what the operator typed.
+  values?: SubmittedEventValues;
 }
 
 /**
@@ -40,13 +55,26 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
   const startsAt = formData.get("starts_at") as string;
   const endsAt = formData.get("ends_at") as string;
 
-  if (!title) return { error: "Title is required." };
-  if (!startsAt || !endsAt) return { error: "Start and end times are required." };
+  // Everything the operator typed, so any error return can hand it back.
+  const submitted: SubmittedEventValues = {
+    title: (formData.get("title") as string) ?? "",
+    starts_at: startsAt ?? "",
+    ends_at: endsAt ?? "",
+    venue_name: (formData.get("venue_name") as string) ?? "",
+    city: (formData.get("city") as string) ?? "",
+    description: (formData.get("description") as string) ?? "",
+    is_published: formData.get("is_published") === "on",
+    printing_enabled: formData.get("printing_enabled") === "on",
+    print_price: (formData.get("print_price") as string) ?? "",
+  };
+
+  if (!title) return { error: "Title is required.", values: submitted };
+  if (!startsAt || !endsAt) return { error: "Start and end times are required.", values: submitted };
 
   const start = new Date(startsAt);
   const end = new Date(endsAt);
   if (!(end.getTime() > start.getTime())) {
-    return { error: "End time must be after the start time." };
+    return { error: "End time must be after the start time.", values: submitted };
   }
 
   const printPricePesos = Number(formData.get("print_price") ?? 0);
@@ -65,12 +93,12 @@ export async function saveEvent(_prev: SaveEventState, formData: FormData): Prom
 
   if (id) {
     const { error } = await supabase.from("events").update(base).eq("id", id).eq("tenant_id", staff.tenantId);
-    if (error) return { error: `Couldn't save event: ${error.message}` };
+    if (error) return { error: `Couldn't save event: ${error.message}`, values: submitted };
   } else {
     // Slug is unique per tenant; a duplicate title would clash, so make it unique.
     const slug = `${slugify(title)}-${Date.now().toString(36).slice(-4)}`;
     const { error } = await supabase.from("events").insert({ ...base, tenant_id: staff.tenantId, slug });
-    if (error) return { error: `Couldn't create event: ${error.message}` };
+    if (error) return { error: `Couldn't create event: ${error.message}`, values: submitted };
   }
 
   revalidatePath("/events");

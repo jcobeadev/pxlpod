@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text, Button } from "../src/components/ui";
+import { DatePickerField } from "../src/components/DatePickerField";
 import { colors } from "../src/theme";
 import { usePoplabClient } from "./_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
+const MESSENGER_URL = process.env.EXPO_PUBLIC_MESSENGER_URL ?? "";
 
 /**
  * 28 Book us. An inquiry form that lands in the operator's console pipeline.
- * Inserts directly as the anonymous guest — RLS lets anyone insert an inquiry
- * for an active tenant but never read them back, so bookings are staff-only.
+ * The submit goes through the submit_inquiry RPC (SECURITY DEFINER): a guest may
+ * create an inquiry but never read one back, so a plain insert().select() looked
+ * like a failure even when the row was written — the RPC inserts and returns the
+ * reference in one call. Guests who'd rather just chat get a Messenger shortcut.
  */
 export default function BookUsScreen() {
   const router = useRouter();
@@ -30,6 +34,16 @@ export default function BookUsScreen() {
   const [busy, setBusy] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
 
+  const openMessenger = async () => {
+    try {
+      const ok = await Linking.canOpenURL(MESSENGER_URL);
+      if (!ok) throw new Error("no handler");
+      await Linking.openURL(MESSENGER_URL);
+    } catch {
+      Alert.alert("Couldn't open Messenger", "Please make sure Messenger is installed, or use the form below.");
+    }
+  };
+
   const submit = async () => {
     if (!name.trim()) {
       Alert.alert("Name needed", "Please tell us your name.");
@@ -39,27 +53,28 @@ export default function BookUsScreen() {
       Alert.alert("Contact needed", "Add an email or a phone number so we can reach you.");
       return;
     }
+    const guestCount = guests.trim() ? Number(guests.replace(/[^0-9]/g, "")) : null;
     setBusy(true);
     try {
-      const { data, error } = await client
-        .from("inquiries")
-        .insert({
-          tenant_id: TENANT_ID,
-          name: name.trim(),
-          email: email.trim() || null,
-          phone: phone.trim() || null,
-          event_type: eventType.trim() || null,
-          preferred_date: date.trim() || null,
-          location: location.trim() || null,
-          guest_count: guests.trim() ? Number(guests) : null,
-          notes: notes.trim() || null,
-        })
-        .select("reference")
-        .single();
+      const { data, error } = await client.rpc("submit_inquiry", {
+        p_tenant_id: TENANT_ID,
+        p_name: name.trim(),
+        p_email: email.trim() || undefined,
+        p_phone: phone.trim() || undefined,
+        p_event_type: eventType.trim() || undefined,
+        p_preferred_date: date || undefined,
+        p_location: location.trim() || undefined,
+        p_guest_count: guestCount && Number.isFinite(guestCount) ? guestCount : undefined,
+        p_notes: notes.trim() || undefined,
+      });
       if (error) throw error;
-      setReference(data.reference);
+      setReference(data as string);
     } catch (e) {
-      Alert.alert("Couldn't send", e instanceof Error ? e.message : "Please try again.");
+      const msg =
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message: unknown }).message)
+          : "Please check your connection and try again.";
+      Alert.alert("Couldn't send", msg);
     } finally {
       setBusy(false);
     }
@@ -87,21 +102,45 @@ export default function BookUsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10}><Text style={{ fontSize: 20 }}>✕</Text></Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: insets.bottom + 40, gap: 14 }} keyboardShouldPersistTaps="handled">
-        <Text style={{ fontSize: 14, color: colors.muted.DEFAULT }}>
-          Tell us about your event and we&apos;ll get back to you with a quote.
-        </Text>
-        <Field label="Your name" value={name} onChangeText={setName} placeholder="Juan dela Cruz" />
-        <Field label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
-        <Field label="Phone" value={phone} onChangeText={setPhone} placeholder="0917 000 0000" keyboardType="phone-pad" />
-        <Field label="Event type" value={eventType} onChangeText={setEventType} placeholder="Wedding, birthday, brand launch…" />
-        <Field label="Preferred date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
-        <Field label="Location" value={location} onChangeText={setLocation} placeholder="City / venue" />
-        <Field label="Guest count" value={guests} onChangeText={setGuests} placeholder="e.g. 100" keyboardType="number-pad" />
-        <Field label="Anything else?" value={notes} onChangeText={setNotes} placeholder="Tell us more…" multiline />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={insets.top + 8}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: insets.bottom + 120, gap: 14 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          <Text style={{ fontSize: 14, color: colors.muted.DEFAULT }}>
+            Tell us about your event and we&apos;ll get back to you with a quote.
+          </Text>
 
-        <Button label={busy ? "Sending…" : "Send request"} onPress={submit} />
-      </ScrollView>
+          {MESSENGER_URL ? (
+            <Pressable
+              onPress={openMessenger}
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: colors.ink, paddingHorizontal: 16, paddingVertical: 14 }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text weight="bold" style={{ fontSize: 15 }}>Chat on Messenger</Text>
+                <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT }}>Talk to us right now instead</Text>
+              </View>
+              <Text style={{ fontSize: 18, color: colors.ink }}>→</Text>
+            </Pressable>
+          ) : null}
+
+          <Field label="Your name" value={name} onChangeText={setName} placeholder="Juan dela Cruz" />
+          <Field label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
+          <Field label="Phone" value={phone} onChangeText={setPhone} placeholder="0917 000 0000" keyboardType="phone-pad" />
+          <Field label="Event type" value={eventType} onChangeText={setEventType} placeholder="Wedding, birthday, brand launch…" />
+          <DatePickerField label="Preferred date" value={date} onChange={setDate} placeholder="Pick a date" />
+          <Field label="Location" value={location} onChangeText={setLocation} placeholder="City / venue" />
+          <Field label="Guest count" value={guests} onChangeText={setGuests} placeholder="e.g. 100" keyboardType="number-pad" />
+          <Field label="Anything else?" value={notes} onChangeText={setNotes} placeholder="Tell us more…" multiline />
+
+          <Button label={busy ? "Sending…" : "Send request"} onPress={submit} disabled={busy} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

@@ -879,6 +879,20 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      submit_inquiry: {
+        Args: {
+          p_email?: string
+          p_event_type?: string
+          p_guest_count?: number
+          p_location?: string
+          p_name: string
+          p_notes?: string
+          p_phone?: string
+          p_preferred_date?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       capture_surface: "app" | "web"

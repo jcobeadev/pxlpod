@@ -1,27 +1,42 @@
-import { Alert, Image, Pressable, View } from "react-native";
+import { useState } from "react";
+import { Alert, Image, Pressable, ScrollView, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Legacy subpath: the top-level saveToLibraryAsync is deprecated and throws in
 // SDK 57. See app/session/delivery.tsx.
 import * as MediaLibrary from "expo-media-library/legacy";
 import Share from "react-native-share";
+import { useLiveEvent } from "@poplab/api";
 
 import { Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
 import { useLibrary, useStrips } from "../../src/library/useLibrary";
+import { createShareLink } from "../../src/session/shareLink";
+import { createPrintPass } from "../../src/session/printPass";
+import { usePoplabClient } from "../_layout";
+
+const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
 
 /**
- * 22 Session detail — one saved strip, full size, with share, save-to-device
- * and delete. Re-render into another template (the design's fourth action) is a
- * later batch; it needs the original frames, which this build doesn't retain
- * past the session.
+ * 22 Session detail — one saved strip, full size. Beyond the OS share sheet and
+ * save-to-device, a saved strip can also be turned into a branded share link or,
+ * when a pop-up is live, a print pass — so guests can print a favourite from a
+ * past session, not only the one they just shot. Re-rendering into another
+ * template still waits on retaining the original frames.
  */
 export default function StripDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const client = usePoplabClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { strips } = useStrips();
   const remove = useLibrary((s) => s.remove);
+
+  const liveEventQuery = useLiveEvent(client, TENANT_ID);
+  const liveEvent = liveEventQuery.data ?? null;
+
+  const [linking, setLinking] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const strip = strips.find((s) => s.id === id);
 
@@ -56,6 +71,59 @@ export default function StripDetail() {
     }
   };
 
+  const onCreateLink = () => {
+    Alert.alert(
+      "Create a share link?",
+      "This uploads your strip so anyone with the link can view it. It expires in 30 days.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Create link",
+          onPress: async () => {
+            setLinking(true);
+            try {
+              const { url } = await createShareLink(client, strip.uri, TENANT_ID);
+              await Share.open({ message: url, failOnCancel: false }).catch(() => {});
+              Alert.alert("Link ready", url);
+            } catch (e) {
+              Alert.alert("Couldn't create link", e instanceof Error ? e.message : "Please try again.");
+            } finally {
+              setLinking(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const onPrint = () => {
+    if (!liveEvent) return;
+    Alert.alert(
+      "Print at this pop-up?",
+      `₱${(liveEvent.print_price_cents / 100).toFixed(0)} per print, paid at the booth. This uploads your strip so staff can print it.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Get print code",
+          onPress: async () => {
+            setPrinting(true);
+            try {
+              const pass = await createPrintPass(client, strip.uri, liveEvent.id, strip.templateId, null);
+              router.push({
+                pathname: "/session/pass",
+                params: { code: pass.code, price: String(pass.price_cents), expiresAt: pass.expires_at, event: liveEvent.title },
+              });
+            } catch (e) {
+              Alert.alert("Couldn't create print pass", e instanceof Error ? e.message : "Please try again.");
+            } finally {
+              setPrinting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const onDelete = () => {
     Alert.alert("Delete strip?", "This removes it from the app. Copies you already saved or shared stay.", [
       { text: "Cancel", style: "cancel" },
@@ -85,14 +153,42 @@ export default function StripDetail() {
         <Image source={{ uri: strip.uri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
       </View>
 
-      <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 22, paddingBottom: insets.bottom + 16 }}>
-        <Pressable onPress={onShare} style={{ flex: 1, borderWidth: 1, borderColor: colors.surface.DEFAULT, paddingVertical: 14, alignItems: "center" }}>
-          <Text weight="bold" style={{ color: colors.surface.DEFAULT, letterSpacing: 0.5 }}>Share</Text>
+      <ScrollView
+        style={{ maxHeight: 260 }}
+        contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: insets.bottom + 16, gap: 10 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {liveEvent ? (
+          <Pressable
+            onPress={onPrint}
+            disabled={printing}
+            style={{ backgroundColor: colors.amber, paddingVertical: 15, alignItems: "center", opacity: printing ? 0.5 : 1 }}
+          >
+            <Text weight="bold" style={{ color: colors.ink, letterSpacing: 0.5 }}>
+              {printing ? "Preparing…" : `Print at this pop-up · ₱${(liveEvent.print_price_cents / 100).toFixed(0)}`}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <Pressable onPress={onShare} style={{ flex: 1, borderWidth: 1, borderColor: colors.surface.DEFAULT, paddingVertical: 14, alignItems: "center" }}>
+            <Text weight="bold" style={{ color: colors.surface.DEFAULT, letterSpacing: 0.5 }}>Share…</Text>
+          </Pressable>
+          <Pressable onPress={onSave} style={{ flex: 1, borderWidth: 1, borderColor: colors.surface.DEFAULT, paddingVertical: 14, alignItems: "center" }}>
+            <Text weight="bold" style={{ color: colors.surface.DEFAULT, letterSpacing: 0.5 }}>Save to device</Text>
+          </Pressable>
+        </View>
+
+        <Pressable
+          onPress={onCreateLink}
+          disabled={linking}
+          style={{ borderWidth: 1, borderColor: "rgba(255,255,255,0.4)", paddingVertical: 14, alignItems: "center", opacity: linking ? 0.5 : 1 }}
+        >
+          <Text weight="bold" style={{ color: colors.surface.DEFAULT, letterSpacing: 0.5 }}>
+            {linking ? "Creating link…" : "Create a share link"}
+          </Text>
         </Pressable>
-        <Pressable onPress={onSave} style={{ flex: 1, backgroundColor: colors.amber, paddingVertical: 14, alignItems: "center" }}>
-          <Text weight="bold" style={{ color: colors.ink, letterSpacing: 0.5 }}>Save to device</Text>
-        </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }

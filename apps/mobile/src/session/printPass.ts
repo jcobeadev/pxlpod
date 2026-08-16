@@ -1,5 +1,5 @@
-import { File } from "expo-file-system";
 import type { PoplabClient, PrintJobRow } from "@poplab/api";
+import { readFileForUpload } from "./upload";
 
 /**
  * Issue a print pass for a finished strip at a live pop-up.
@@ -22,8 +22,8 @@ export async function createPrintPass(
   const uid = userData.user.id;
 
   const path = `${uid}/print-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const bytes = new File(localUri).bytes();
-  const { error: upErr } = await client.storage.from("shares").upload(path, bytes, {
+  const body = await readFileForUpload(localUri);
+  const { error: upErr } = await client.storage.from("shares").upload(path, body, {
     contentType: "image/jpeg",
     upsert: false,
   });
