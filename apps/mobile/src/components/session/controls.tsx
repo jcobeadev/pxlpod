@@ -19,13 +19,23 @@ export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
+  stretch = false,
 }: {
   options: SegmentedOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  /** Fill the parent width with equal-width segments (vs. hugging content). */
+  stretch?: boolean;
 }) {
   return (
-    <View style={{ flexDirection: "row", borderWidth: 1, borderColor: colors.ink, alignSelf: "flex-start" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        borderWidth: 1,
+        borderColor: colors.ink,
+        alignSelf: stretch ? "stretch" : "flex-start",
+      }}
+    >
       {options.map((opt, i) => {
         const active = opt.value === value;
         return (
@@ -33,8 +43,10 @@ export function Segmented<T extends string | number>({
             key={String(opt.value)}
             onPress={() => onChange(opt.value)}
             style={{
-              paddingHorizontal: 18,
-              paddingVertical: 10,
+              flex: stretch ? 1 : undefined,
+              paddingHorizontal: stretch ? 8 : 18,
+              paddingVertical: 11,
+              alignItems: "center",
               backgroundColor: active ? colors.ink : "transparent",
               borderLeftWidth: i === 0 ? 0 : 1,
               borderLeftColor: colors.ink,

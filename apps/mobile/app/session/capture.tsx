@@ -35,28 +35,14 @@ type Phase = "getready" | "counting" | "review";
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
 
 /**
- * A few zoom stops for the quick control. Always the widest (minZoom) plus a
- * couple of steps in, so a device with an ultra-wide gets its 0.5x view as the
- * first stop and everything zooms up from there.
+ * Label a zoom value the way the iOS camera does, relative to the wide lens
+ * (the "1x" reference). Below three-quarters of that is the ultra-wide, shown
+ * as "0.5×".
  */
-function zoomStops(minZoom: number, maxZoom: number): number[] {
-  const stops = [minZoom, minZoom * 2, minZoom * 4].filter((z) => z <= maxZoom);
-  if (stops[stops.length - 1] !== maxZoom && maxZoom > minZoom) {
-    // keep it to at most 3 stops; no-op if already covered
-  }
-  return stops.length > 0 ? stops : [minZoom];
-}
-
-/**
- * Label a stop the way the iOS camera does: the widest lens is the reference.
- * If the device zooms below 1.0 it has an ultra-wide, so that stop reads "0.5×";
- * otherwise the widest is "1×".
- */
-function zoomStopLabel(z: number, minZoom: number): string {
-  const hasUltraWide = minZoom < 0.95;
-  const relative = hasUltraWide ? z / (minZoom * 2) : z / minZoom;
-  if (relative < 0.75) return "0.5×";
-  return `${relative.toFixed(relative < 10 ? 1 : 0).replace(/\.0$/, "")}×`;
+function iosZoomLabel(z: number, wideRef: number): string {
+  const r = z / wideRef;
+  if (r < 0.75) return "0.5×";
+  return `${r % 1 === 0 ? r : r.toFixed(1)}×`;
 }
 
 function measure(uri: string): Promise<{ width: number; height: number }> {
@@ -84,11 +70,14 @@ export default function CaptureScreen() {
   const shotCount = useSession((s) => s.shotCount());
 
   const { hasPermission, requestPermission } = useCameraPermission();
-  // The default virtual device — on modern iPhones this fuses ultra-wide + wide
-  // (+ tele), so a single `zoom` slides smoothly across lenses. That's how the
-  // 0.5x ultra-wide is reached: zoom out to the device minimum. Locking a single
-  // physical lens (as before) gave a fixed, un-zoomable frame.
-  const device = useCameraDevice(settings.facing);
+  // Ask for the VIRTUAL multi-lens device (ultra-wide + wide), not the default
+  // single lens. getCameraDevice with no filter returns the default wide camera
+  // whose zoom bottoms out at 1x — the ultra-wide 0.5x is simply not in range.
+  // Listing both physical lenses returns the fused device that CAN zoom down to
+  // the ultra-wide.
+  const device = useCameraDevice(settings.facing, {
+    physicalDevices: ["ultra-wide-angle", "wide-angle"],
+  });
   // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode — the
   // "Could not decode image at …heic" failure on the assemble screen. JPEG is
   // universally decodable and what the compositor expects.
@@ -96,6 +85,16 @@ export default function CaptureScreen() {
 
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 8, 8); // cap runaway digital zoom
+  // Whether this device actually carries an ultra-wide lens, so 0.5x is real.
+  const hasUltraWide = (device?.physicalDevices ?? []).some((d) =>
+    (d?.name ?? "").toLowerCase().includes("ultra"),
+  );
+  // The zoom value that reads as "1x" in iOS terms: on an ultra-wide device the
+  // wide lens sits at twice the widest zoom (ultra-wide is 0.5x of the wide).
+  const wideRef = hasUltraWide ? minZoom * 2 : minZoom;
+  const zoomOptions = [minZoom, minZoom * 2, minZoom * 4]
+    .filter((z, i, a) => z <= maxZoom + 0.001 && a.indexOf(z) === i)
+    .map((z) => ({ value: z, label: iosZoomLabel(z, wideRef) }));
 
   // Zoom is a plain number, NOT a reanimated SharedValue. Passing a SharedValue
   // to <Camera zoom> makes VisionCamera read it on the render thread via
@@ -325,12 +324,12 @@ export default function CaptureScreen() {
             padding: 5,
           }}
         >
-          {zoomStops(minZoom, maxZoom).map((z) => {
-            const active = Math.abs(zoomLabel - z) < 0.05;
+          {zoomOptions.map((opt) => {
+            const active = Math.abs(zoomLabel - opt.value) < 0.05;
             return (
               <Pressable
-                key={z}
-                onPress={() => jumpZoom(z)}
+                key={opt.value}
+                onPress={() => jumpZoom(opt.value)}
                 style={{
                   minWidth: 40,
                   height: 34,
@@ -342,7 +341,7 @@ export default function CaptureScreen() {
                 }}
               >
                 <Text weight="bold" style={{ fontSize: 12, color: active ? colors.ink : colors.surface.DEFAULT }}>
-                  {zoomStopLabel(z, minZoom)}
+                  {opt.label}
                 </Text>
               </Pressable>
             );

@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as MediaLibrary from "expo-media-library";
+// The top-level saveToLibraryAsync is deprecated in SDK 57 and throws at
+// runtime; the legacy subpath keeps the simple "save a file to the camera roll"
+// call without adopting the new class-based Asset API.
+import * as MediaLibrary from "expo-media-library/legacy";
 import Share from "react-native-share";
 import { useLiveEvent } from "@poplab/api";
 
@@ -94,10 +97,18 @@ export default function DeliveryHub() {
   const soon = (what: string) =>
     Alert.alert(what, "Lands in the next update, once the booth's delivery service is switched on.");
 
+  // Leave the whole capture flow and return Home. dismissAll() only pops the
+  // session stack back to its first screen (Choose a template), which is why
+  // Done was landing there; replacing to the tab root exits the group entirely,
+  // unmounts the session (which resets the store), and Home refetches on focus.
+  const onDone = () => {
+    router.replace("/(tabs)");
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface.DEFAULT, paddingTop: insets.top }}>
       <View style={{ paddingHorizontal: 22, paddingTop: 10, flexDirection: "row", justifyContent: "flex-end" }}>
-        <Pressable onPress={() => router.dismissAll?.() ?? router.replace("/(tabs)")} hitSlop={10}>
+        <Pressable onPress={onDone} hitSlop={10}>
           <Text weight="bold" style={{ fontSize: 13, letterSpacing: 1, textTransform: "uppercase", color: colors.muted.DEFAULT }}>Done</Text>
         </Pressable>
       </View>

@@ -1,7 +1,9 @@
 import { Alert, Image, Pressable, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as MediaLibrary from "expo-media-library";
+// Legacy subpath: the top-level saveToLibraryAsync is deprecated and throws in
+// SDK 57. See app/session/delivery.tsx.
+import * as MediaLibrary from "expo-media-library/legacy";
 import Share from "react-native-share";
 
 import { Text } from "../../src/components/ui";
