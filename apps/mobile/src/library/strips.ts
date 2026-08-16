@@ -96,6 +96,9 @@ export async function commitStrip(
   const dest = new File(stripsDir(), `${id}.jpg`);
 
   const buffer = await new File(sourceUri).arrayBuffer();
+  // create() throws FileAlreadyExists if the path is taken; the id is unique, but
+  // guard anyway so a retry can never dead-end the save.
+  if (dest.exists) dest.delete();
   dest.create();
   dest.write(new Uint8Array(buffer));
 

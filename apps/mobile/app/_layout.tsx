@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { createPoplabClient, ensureAnonymousSession, type PoplabClient } from "@poplab/api";
 
 import { authStorage } from "../src/lib/authStorage";
@@ -66,8 +67,9 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <PoplabClientContext.Provider value={poplabClient}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <PoplabClientContext.Provider value={poplabClient}>
         <QueryClientProvider client={queryClient}>
           <Stack
             screenOptions={{
@@ -84,7 +86,8 @@ export default function RootLayout() {
             <Stack.Screen name="strip/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
           </Stack>
         </QueryClientProvider>
-      </PoplabClientContext.Provider>
-    </SafeAreaProvider>
+        </PoplabClientContext.Provider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -26,6 +26,10 @@ export interface CompositeResult {
   error: string | null;
 }
 
+// The most recently written preview, module-level so it survives remounts and
+// can be cleaned up when the next one is written.
+let lastPreview: File | null = null;
+
 export function useComposite(): CompositeResult {
   const client = usePoplabClient();
   const template = useSession((s) => s.template);
@@ -81,10 +85,27 @@ export function useComposite(): CompositeResult {
 
         if (id !== runId.current) return; // superseded
 
-        // New file per render so <Image> never serves a stale cache entry.
-        const file = new File(Paths.cache, `preview-${id}.jpg`);
+        // A unique name per render so <Image> never serves a stale cache entry.
+        // Date.now() keeps it unique across hook remounts and app restarts —
+        // `preview-${id}` alone repeated (id resets to 1 each mount) and
+        // collided with a leftover file, which is what File.create() was
+        // throwing FileAlreadyExists on. Delete first as a belt-and-braces.
+        const file = new File(Paths.cache, `preview-${Date.now()}-${id}.jpg`);
+        if (file.exists) file.delete();
         file.create();
         file.write(bytes);
+
+        // Drop the previous preview so the cache doesn't accumulate a file per
+        // filter tap over a session.
+        const prev = lastPreview;
+        lastPreview = file;
+        if (prev && prev.uri !== file.uri) {
+          try {
+            if (prev.exists) prev.delete();
+          } catch {
+            // best effort
+          }
+        }
 
         setResult({ uri: file.uri, isComposing: false, error: null });
       } catch (e) {

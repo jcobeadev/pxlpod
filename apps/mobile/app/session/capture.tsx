@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS, useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import {
   Camera,
   useCameraDevice,
@@ -32,14 +34,29 @@ type Phase = "getready" | "counting" | "review";
 
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
 
-/** Condense VisionCamera's device name to a short lens tag for the HUD. */
-function lensLabel(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes("ultra")) return "◉ ULTRA-WIDE";
-  if (n.includes("tele")) return "◉ TELEPHOTO";
-  if (n.includes("wide")) return "◉ WIDE";
-  if (n.includes("front")) return "◉ FRONT";
-  return `◉ ${name.toUpperCase()}`;
+/**
+ * A few zoom stops for the quick control. Always the widest (minZoom) plus a
+ * couple of steps in, so a device with an ultra-wide gets its 0.5x view as the
+ * first stop and everything zooms up from there.
+ */
+function zoomStops(minZoom: number, maxZoom: number): number[] {
+  const stops = [minZoom, minZoom * 2, minZoom * 4].filter((z) => z <= maxZoom);
+  if (stops[stops.length - 1] !== maxZoom && maxZoom > minZoom) {
+    // keep it to at most 3 stops; no-op if already covered
+  }
+  return stops.length > 0 ? stops : [minZoom];
+}
+
+/**
+ * Label a stop the way the iOS camera does: the widest lens is the reference.
+ * If the device zooms below 1.0 it has an ultra-wide, so that stop reads "0.5×";
+ * otherwise the widest is "1×".
+ */
+function zoomStopLabel(z: number, minZoom: number): string {
+  const hasUltraWide = minZoom < 0.95;
+  const relative = hasUltraWide ? z / (minZoom * 2) : z / minZoom;
+  if (relative < 0.75) return "0.5×";
+  return `${relative.toFixed(relative < 10 ? 1 : 0).replace(/\.0$/, "")}×`;
 }
 
 function measure(uri: string): Promise<{ width: number; height: number }> {
@@ -67,14 +84,49 @@ export default function CaptureScreen() {
   const shotCount = useSession((s) => s.shotCount());
 
   const { hasPermission, requestPermission } = useCameraPermission();
-  // Ultra-wide first for the fish-eye look; wide-angle is the universal fallback.
-  const device = useCameraDevice(settings.facing, {
-    physicalDevices: ["ultra-wide-angle", "wide-angle"],
-  });
+  // The default virtual device — on modern iPhones this fuses ultra-wide + wide
+  // (+ tele), so a single `zoom` slides smoothly across lenses. That's how the
+  // 0.5x ultra-wide is reached: zoom out to the device minimum. Locking a single
+  // physical lens (as before) gave a fixed, un-zoomable frame.
+  const device = useCameraDevice(settings.facing);
   // JPEG, explicitly. iOS defaults to HEIC, which Skia cannot decode — the
   // "Could not decode image at …heic" failure on the assemble screen. JPEG is
   // universally decodable and what the compositor expects.
   const photoOutput = usePhotoOutput({ qualityPrioritization: "quality", containerFormat: "jpeg" });
+
+  const minZoom = device?.minZoom ?? 1;
+  const maxZoom = Math.min(device?.maxZoom ?? 8, 8); // cap runaway digital zoom
+  const zoom = useSharedValue(1);
+  const zoomStart = useSharedValue(1);
+  const [zoomLabel, setZoomLabel] = useState(1);
+
+  // Start at the widest the device offers (the 0.5x ultra-wide view where it
+  // exists) and reset when the lens set changes (front/back flip).
+  useEffect(() => {
+    zoom.value = minZoom;
+    zoomStart.value = minZoom;
+    setZoomLabel(minZoom);
+  }, [minZoom, zoom, zoomStart]);
+
+  useAnimatedReaction(
+    () => zoom.value,
+    (v) => runOnJS(setZoomLabel)(v),
+  );
+
+  const pinch = Gesture.Pinch()
+    .onStart(() => {
+      zoomStart.value = zoom.value;
+    })
+    .onUpdate((e) => {
+      const next = zoomStart.value * e.scale;
+      zoom.value = next < minZoom ? minZoom : next > maxZoom ? maxZoom : next;
+    });
+
+  const jumpZoom = (z: number) => {
+    const clamped = z < minZoom ? minZoom : z > maxZoom ? maxZoom : z;
+    zoom.value = clamped;
+    setZoomLabel(clamped);
+  };
 
   const [phase, setPhase] = useState<Phase>("getready");
   const [flash, setFlash] = useState(false);
@@ -178,12 +230,15 @@ export default function CaptureScreen() {
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       {/* --- Camera preview -------------------------------------------- */}
       {device && hasPermission ? (
-        <Camera
-          style={StyleSheet.absoluteFill}
-          device={device}
-          isActive={phase !== "review"}
-          outputs={[photoOutput]}
-        />
+        <GestureDetector gesture={pinch}>
+          <Camera
+            style={StyleSheet.absoluteFill}
+            device={device}
+            isActive={phase !== "review"}
+            outputs={[photoOutput]}
+            zoom={zoom}
+          />
+        </GestureDetector>
       ) : (
         <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", padding: 32, gap: 16 }]}>
           <Text variant="display" style={{ fontSize: 22, color: colors.surface.DEFAULT, textAlign: "center" }}>
@@ -239,13 +294,6 @@ export default function CaptureScreen() {
           <Text weight="bold" style={{ color: colors.surface.DEFAULT, fontSize: 13, letterSpacing: 0.5 }}>
             Shot {Math.min(shotNumber, shotCount)} / {shotCount}
           </Text>
-          {/* Which physical lens is live — lets us confirm the ultra-wide
-              ("fish-eye") is actually being reached on this device. */}
-          {device ? (
-            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 9, letterSpacing: 0.3 }} numberOfLines={1}>
-              {lensLabel(device.name)}
-            </Text>
-          ) : null}
         </View>
         <RoundButton
           label="⟲"
@@ -257,6 +305,46 @@ export default function CaptureScreen() {
       <View style={{ position: "absolute", top: insets.top + 56, right: 16 }}>
         <SlotProgress template={template.spec} filled={photos.length} />
       </View>
+
+      {/* --- Zoom control: pinch anywhere, or tap a stop. The first stop is
+             the widest the device offers (0.5x ultra-wide where present). --- */}
+      {device && hasPermission && phase !== "review" ? (
+        <View
+          style={{
+            position: "absolute",
+            bottom: insets.bottom + 130,
+            alignSelf: "center",
+            flexDirection: "row",
+            gap: 8,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            borderRadius: 22,
+            padding: 5,
+          }}
+        >
+          {zoomStops(minZoom, maxZoom).map((z) => {
+            const active = Math.abs(zoomLabel - z) < 0.05;
+            return (
+              <Pressable
+                key={z}
+                onPress={() => jumpZoom(z)}
+                style={{
+                  minWidth: 40,
+                  height: 34,
+                  paddingHorizontal: 10,
+                  borderRadius: 17,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: active ? colors.surface.DEFAULT : "transparent",
+                }}
+              >
+                <Text weight="bold" style={{ fontSize: 12, color: active ? colors.ink : colors.surface.DEFAULT }}>
+                  {zoomStopLabel(z, minZoom)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
 
       {/* --- Centre: get-ready / countdown ----------------------------- */}
       <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]} pointerEvents="none">
