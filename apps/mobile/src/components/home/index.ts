@@ -3,6 +3,7 @@ export { StartSessionHero } from "./StartSessionHero";
 export { TemplatesRow } from "./TemplatesRow";
 export { RecentStripsRow } from "./RecentStripsRow";
 export { PastEventsRow } from "./PastEventsRow";
+export { PortfolioRow } from "./PortfolioRow";
 export { UpcomingEvents } from "./UpcomingEvents";
 export { BookUsCta } from "./BookUsCta";
 export { HomeLoading } from "./HomeLoading";

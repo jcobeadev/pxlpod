@@ -72,7 +72,7 @@ export default function MoreScreen() {
         <Section title="Privacy & my data">
           <Bullet>Your strips and the photos in them stay on this phone. Nothing is uploaded to make a strip.</Bullet>
           <Bullet>Save to device writes a copy to your camera roll. Share hands the image to whichever app you pick.</Bullet>
-          <Bullet>Sending, links and printing (coming soon) will upload a photo only after you tap them and agree — never before.</Bullet>
+          <Bullet>Share links and printing upload a photo only after you tap them and agree — never before.</Bullet>
           <Pressable onPress={deleteAll} style={{ marginTop: 14, borderWidth: 1, borderColor: "#A33418", paddingVertical: 13, alignItems: "center" }}>
             <Text weight="bold" style={{ color: "#A33418", letterSpacing: 0.4 }}>Delete all my strips ({strips.length})</Text>
           </Pressable>

@@ -5,7 +5,12 @@ import { colors } from "../../theme/tokens";
 
 export interface StartSessionHeroProps {
   onPress?: () => void;
+  /** Operator tagline shown under the button, edited in the console (Content →
+   * Home hero line). Falls back to a functional description of the flow. */
+  caption?: string;
 }
+
+const DEFAULT_CAPTION = "4 shots · countdown · ~40 seconds";
 
 /**
  * "Start session" hero (04 Home). The session flow itself (05 Choose a
@@ -19,7 +24,7 @@ export interface StartSessionHeroProps {
  * shutter floating on white. Press feedback is done with the `opacity` prop
  * instead, which is honoured. Every Pressable added here should follow suit.
  */
-export function StartSessionHero({ onPress }: StartSessionHeroProps) {
+export function StartSessionHero({ onPress, caption }: StartSessionHeroProps) {
   return (
     <View style={{ marginHorizontal: 22, gap: 12 }}>
       <Pressable
@@ -75,7 +80,7 @@ export function StartSessionHero({ onPress }: StartSessionHeroProps) {
         weight="medium"
         style={{ fontSize: 12, letterSpacing: 0.4, color: colors.muted.DEFAULT }}
       >
-        4 shots · countdown · ~40 seconds
+        {caption?.trim() || DEFAULT_CAPTION}
       </Text>
     </View>
   );
