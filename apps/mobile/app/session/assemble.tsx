@@ -20,6 +20,7 @@ export default function AssembleScreen() {
   const template = useSession((s) => s.template);
   const photos = useSession((s) => s.photos);
   const shotCount = useSession((s) => s.shotCount());
+  const clearPhotos = useSession((s) => s.clearPhotos);
   const { uri, isComposing, error } = useComposite();
 
   // A floor on how long the building state shows, so a fast compose doesn't
@@ -55,7 +56,7 @@ export default function AssembleScreen() {
               Couldn&apos;t build your strip
             </Text>
             <Text style={{ color: colors.muted.DEFAULT, fontSize: 13, textAlign: "center" }}>{error}</Text>
-            <Button label="Retake" variant="secondary" onPress={() => router.replace("/session/capture")} />
+            <Button label="Retake" variant="secondary" onPress={() => { clearPhotos(); router.replace("/session/capture"); }} />
           </>
         ) : (
           <>

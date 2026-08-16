@@ -96,6 +96,8 @@ interface SessionState {
   addPhoto: (photo: CapturedPhoto) => void;
   /** Drop the frame at `index` so the capture screen re-shoots just that slot. */
   retakeAt: (index: number) => void;
+  /** Empty all captured frames so the whole session is shot again. */
+  clearPhotos: () => void;
 
   // ---- effects & finishing --------------------------------------------
   setFilter: (id: string, amount?: number) => void;
@@ -179,6 +181,8 @@ export const useSession = create<SessionState>((set, get) => ({
 
   retakeAt: (index) =>
     set((s) => ({ photos: s.photos.filter((_, i) => i !== index) })),
+
+  clearPhotos: () => set({ photos: [] }),
 
   setFilter: (id, amount) =>
     set((s) => ({ filterId: id, filterAmount: amount ?? s.filterAmount })),

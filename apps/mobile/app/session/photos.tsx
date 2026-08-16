@@ -16,7 +16,15 @@ export default function YourPhotos() {
   const template = useSession((s) => s.template);
   const outputKind = useSession((s) => s.outputKind);
   const setOutputKind = useSession((s) => s.setOutputKind);
+  const clearPhotos = useSession((s) => s.clearPhotos);
   const { uri, isComposing } = useComposite();
+
+  // Retake means shoot the whole strip again — clear the frames first, or
+  // capture sees a full set and bounces straight back to assembling.
+  const onRetake = () => {
+    clearPhotos();
+    router.replace("/session/capture");
+  };
 
   if (!template) {
     router.replace("/session");
@@ -27,7 +35,7 @@ export default function YourPhotos() {
     <View style={{ flex: 1, backgroundColor: colors.surface.DEFAULT, paddingTop: insets.top }}>
       <View style={{ paddingHorizontal: 22, paddingTop: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text variant="display" style={{ fontSize: 24, textTransform: "uppercase" }}>Your photos</Text>
-        <Pressable onPress={() => router.replace("/session/capture")} hitSlop={10}>
+        <Pressable onPress={onRetake} hitSlop={10}>
           <Text weight="bold" style={{ fontSize: 13, letterSpacing: 1, textTransform: "uppercase", color: colors.muted.DEFAULT }}>Retake</Text>
         </Pressable>
       </View>

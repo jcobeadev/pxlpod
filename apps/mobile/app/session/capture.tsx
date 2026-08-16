@@ -24,10 +24,10 @@ import { useSession } from "../../src/session/store";
  *
  *   getready → counting → (flash) capture → review → getready(next) → … → assemble
  *
- * The camera is VisionCamera v5: a `Camera` view fed a device and a photo
- * output. The ultra-wide ("fish-eye") lens is requested first and the wide lens
- * is the fallback, so the fish-eye templates get the look and every other phone
- * still works.
+ * The camera is VisionCamera v5: a `Camera` view fed the fused ultra-wide+wide
+ * device and a numeric zoom. On the rear, zoom 1.0 is the ultra-wide (iOS 0.5x)
+ * and 2.0 the wide (1x); the 0.5x stop only shows when the device reports two
+ * physical lenses, which the front camera does not.
  */
 
 type Phase = "getready" | "counting" | "review";
@@ -118,10 +118,6 @@ export default function CaptureScreen() {
       zoomSV.value = clamped;
       runOnJS(setZoomValue)(clamped);
     });
-
-  const debugLine =
-    `${device?.name ?? "-"} physN:${physCount} hasUltra:${hasUltra ? "Y" : "N"} ` +
-    `min:${minZoom.toFixed(2)} max:${maxZoom.toFixed(2)} z:${zoomValue.toFixed(2)}`;
 
   const [phase, setPhase] = useState<Phase>("getready");
   const [flash, setFlash] = useState(false);
@@ -214,7 +210,9 @@ export default function CaptureScreen() {
     setPhase("getready");
   };
 
-  const onClose = () => router.dismissAll?.() ?? router.replace("/(tabs)");
+  // Replace to the tab root (not dismissAll, which only pops to the session's
+  // first screen); this exits the flow and resets the session on unmount.
+  const onClose = () => router.replace("/(tabs)");
 
   if (!template) return null;
 
@@ -301,12 +299,6 @@ export default function CaptureScreen() {
         <SlotProgress template={template.spec} filled={photos.length} />
       </View>
 
-      {/* TEMP zoom diagnostic — remove once 0.5x is calibrated. */}
-      {device ? (
-        <View style={{ position: "absolute", top: insets.top + 52, left: 16, right: 110, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 6, padding: 6 }}>
-          <Text style={{ color: "#7CFC7C", fontSize: 9, lineHeight: 12 }}>{debugLine}</Text>
-        </View>
-      ) : null}
 
       {/* --- Zoom control: pinch anywhere, or tap a stop. The first stop is
              the widest the device offers (0.5x ultra-wide where present). --- */}
