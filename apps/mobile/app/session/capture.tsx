@@ -85,16 +85,28 @@ export default function CaptureScreen() {
 
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 8, 8); // cap runaway digital zoom
-  // Whether this device actually carries an ultra-wide lens, so 0.5x is real.
-  const hasUltraWide = (device?.physicalDevices ?? []).some((d) =>
-    (d?.name ?? "").toLowerCase().includes("ultra"),
-  );
-  // The zoom value that reads as "1x" in iOS terms: on an ultra-wide device the
-  // wide lens sits at twice the widest zoom (ultra-wide is 0.5x of the wide).
-  const wideRef = hasUltraWide ? minZoom * 2 : minZoom;
-  const zoomOptions = [minZoom, minZoom * 2, minZoom * 4]
-    .filter((z, i, a) => z <= maxZoom + 0.001 && a.indexOf(z) === i)
+  // Whether this device carries an ultra-wide lens, so 0.5x is real. Two signals,
+  // because different iPhones report it differently: the device reporting a zoom
+  // floor below 1.0, OR one of its physical lenses naming itself "ultra".
+  const physicalNames = (device?.physicalDevices ?? [])
+    .map((d) => (typeof d === "string" ? d : (d?.name ?? "")))
+    .join(", ");
+  const hasUltraWide = minZoom < 0.95 || physicalNames.toLowerCase().includes("ultra");
+  // The zoom value that reads as "1x" in iOS terms. If the device reports a
+  // sub-1 floor, minZoom IS the 0.5x and 1x is at 1.0. Otherwise the ultra-wide
+  // (if any) is the widest and 1x sits at twice it.
+  const wideRef = minZoom < 0.95 ? 1 : hasUltraWide ? minZoom * 2 : minZoom;
+  const zoomOptions = [
+    hasUltraWide ? wideRef * 0.5 : wideRef,
+    wideRef,
+    wideRef * 2,
+  ]
+    .filter((z, i, a) => z >= minZoom - 0.001 && z <= maxZoom + 0.001 && a.indexOf(z) === i)
     .map((z) => ({ value: z, label: iosZoomLabel(z, wideRef) }));
+
+  const debugLine =
+    `${device?.name ?? "no device"} | phys:[${physicalNames}] ` +
+    `| min ${minZoom.toFixed(2)} max ${maxZoom.toFixed(2)} | uw ${hasUltraWide ? "Y" : "N"} ref ${wideRef.toFixed(2)}`;
 
   // Zoom is a plain number, NOT a reanimated SharedValue. Passing a SharedValue
   // to <Camera zoom> makes VisionCamera read it on the render thread via
@@ -308,6 +320,13 @@ export default function CaptureScreen() {
       <View style={{ position: "absolute", top: insets.top + 56, right: 16 }}>
         <SlotProgress template={template.spec} filled={photos.length} />
       </View>
+
+      {/* TEMP zoom diagnostic — remove once 0.5x is calibrated. */}
+      {device ? (
+        <View style={{ position: "absolute", top: insets.top + 52, left: 16, right: 110, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 6, padding: 6 }}>
+          <Text style={{ color: "#7CFC7C", fontSize: 9, lineHeight: 12 }}>{debugLine}</Text>
+        </View>
+      ) : null}
 
       {/* --- Zoom control: pinch anywhere, or tap a stop. The first stop is
              the widest the device offers (0.5x ultra-wide where present). --- */}
