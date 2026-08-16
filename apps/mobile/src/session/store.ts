@@ -139,10 +139,24 @@ export const useSession = create<SessionState>((set, get) => ({
     const changed = current?.id !== template.id;
     const defaultVariant =
       template.spec.variants.find((v) => v.isDefault) ?? template.spec.variants[0] ?? null;
+
+    // The fish-eye / "high angle" look is the REAR ultra-wide lens pointed down
+    // from above — iPhone front cameras have no ultra-wide at all. So a fish-eye
+    // template defaults to the rear camera (hold the phone up, aim down); every
+    // other template stays on the selfie-friendly front. The guest can still
+    // flip. Only steer facing when the template actually changes, so a manual
+    // flip mid-session isn't overridden.
+    const facing: CameraFacing = changed
+      ? template.spec.category === "fisheye"
+        ? "back"
+        : "front"
+      : get().settings.facing;
+
     set({
       template,
       variant: changed ? defaultVariant : get().variant ?? defaultVariant,
       photos: changed ? [] : get().photos,
+      settings: { ...get().settings, facing, mirrorPreview: facing === "front" ? get().settings.mirrorPreview : false },
       // A template may restrict which filters it allows; if the current pick
       // isn't offered, fall back to Original.
       filterId:
