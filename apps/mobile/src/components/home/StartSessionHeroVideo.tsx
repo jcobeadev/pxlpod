@@ -53,8 +53,10 @@ export function StartSessionHeroVideo({ onPress, caption }: StartSessionHeroVide
         accessibilityLabel="Start session"
         style={{ width: tileWidth, height: tileHeight, backgroundColor: colors.ink, overflow: "hidden" }}
       >
-        {/* The full sheet, scaled so one cell fills the tile, shifted to the
-            current frame. */}
+        {/* The video IS the tile — the clip already carries the PXLPOD branding
+            and a "tap here to start" shutter, so no text/shutter overlay is
+            drawn on top (that was the overlap). The full sheet is scaled so one
+            cell fills the tile, shifted to the current frame. */}
         <Image
           source={SHEET}
           style={{
@@ -66,21 +68,6 @@ export function StartSessionHeroVideo({ onPress, caption }: StartSessionHeroVide
           }}
           resizeMode="cover"
         />
-
-        {/* Legibility scrim under the label. */}
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: tileHeight * 0.7, backgroundColor: "rgba(14,14,12,0.42)" }} />
-
-        <View style={{ position: "absolute", left: 22, right: 22, bottom: 18, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <Text
-            variant="display"
-            style={{ fontSize: 32, lineHeight: 31, color: colors.surface.DEFAULT, textTransform: "uppercase" }}
-          >
-            {"Start\nsession"}
-          </Text>
-          <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: colors.amber, alignItems: "center", justifyContent: "center" }}>
-            <View style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 3.5, borderColor: colors.ink }} />
-          </View>
-        </View>
       </Pressable>
 
       <Text weight="medium" style={{ fontSize: 12, letterSpacing: 0.4, color: colors.muted.DEFAULT }}>

@@ -82,3 +82,13 @@ console. Photos are not uploaded except when the user taps Share link or Print.
 
 - Uses non-exempt encryption: **No** (`ITSAppUsesNonExemptEncryption=false` in
   app.json). No prompt at submit.
+
+## Other App Store Connect answers
+
+- **Sign-in required to use the app?** No (anonymous use).
+- **Demo account for review?** Not needed — say so in the review notes.
+- **Content rights** (does it contain, show, or access third-party content?):
+  **No** — all content is user-generated or PxlPod's own branding.
+- **Made for Kids?** No.
+- **Third-party analytics / ad SDKs?** None.
+- **Advertising Identifier (IDFA)?** Not used → no ATT prompt.

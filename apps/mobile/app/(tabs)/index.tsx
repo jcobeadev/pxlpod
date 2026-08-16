@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
-import { overlayUrl, useAlbums, useAppContent, useEvents, useLiveEvent, useTemplates } from "@poplab/api";
+import { overlayUrl, useAppContent, useEvents, useLiveEvent, usePublishedPhotos, useTemplates } from "@poplab/api";
 
 import {
   BookUsCta,
@@ -9,7 +9,7 @@ import {
   HomeOffline,
   LiveBanner,
   PastEventsRow,
-  PortfolioRow,
+  PortfolioMarquee,
   RecentStripsRow,
   StartSessionHero,
   StartSessionHeroVideo,
@@ -37,7 +37,7 @@ export default function HomeTab() {
   const templatesQuery = useTemplates(client, TENANT_ID);
   const upcomingQuery = useEvents(client, TENANT_ID, { when: "upcoming" });
   const pastQuery = useEvents(client, TENANT_ID, { when: "past" });
-  const albumsQuery = useAlbums(client, TENANT_ID);
+  const photosQuery = usePublishedPhotos(client, TENANT_ID);
   const contentQuery = useAppContent(client, TENANT_ID);
 
   const [dismissedLiveEventId, setDismissedLiveEventId] = useState<string | null>(null);
@@ -67,8 +67,7 @@ export default function HomeTab() {
   const liveEvent = liveEventQuery.data ?? null;
   const templates = templatesQuery.data ?? [];
   const pastEvents = pastQuery.data ?? [];
-  // RLS already returns only published albums to a guest, but filter defensively.
-  const albums = (albumsQuery.data ?? []).filter((a) => a.is_published);
+  const portfolioPhotos = photosQuery.data ?? [];
   const heroCaption = (contentQuery.data?.hero as { body?: string } | undefined)?.body;
   const useVideoHero = (contentQuery.data?.home_hero_video as { body?: string } | undefined)?.body === "on";
   // "Upcoming" includes the pop-up that's live right now (its window hasn't
@@ -99,10 +98,9 @@ export default function HomeTab() {
 
         <RecentStripsRow />
 
-        <PortfolioRow
-          albums={albums}
-          resolveCover={resolveCover}
-          onOpen={(id) => router.push(`/portfolio/${id}`)}
+        <PortfolioMarquee
+          photos={portfolioPhotos}
+          resolvePhoto={resolveCover}
           onSeeAll={() => router.push("/portfolio")}
         />
 

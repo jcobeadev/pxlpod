@@ -66,3 +66,14 @@ Paste-ready metadata for the Android listing. Fill anything in **UPPERCASE**.
 - Media permissions — save the finished strip to the device gallery.
 
 No sensitive permissions (SMS, call log, all-files-access) are used.
+
+## Other Play Console answers
+
+- **Ads:** contains no ads → declare **No ads**.
+- **Target audience & content:** target age **13+** (not designed for children);
+  answer the "Designed for Families / kids" questions as **No**.
+- **Government / News / COVID-19 app?** No to all.
+- **Financial features?** No.
+- **App access:** all functionality is available without special access or a
+  login — no reviewer credentials needed.
+- **Login required?** No (anonymous use).

@@ -68,3 +68,39 @@ export function useAlbumPhotos(
     enabled: Boolean(albumId),
   });
 }
+
+export function publishedPhotosQueryKey(tenantId: string) {
+  return ["publishedPhotos", tenantId] as const;
+}
+
+/**
+ * Every photo across a tenant's published albums — the pool behind the Home
+ * "Portfolio" marquee and its full gallery. Joins `albums` with an inner filter
+ * so only published albums for this tenant are read (RLS also enforces it).
+ */
+export async function fetchPublishedPhotos(
+  client: PoplabClient,
+  tenantId: string,
+): Promise<AlbumPhotoRow[]> {
+  const { data, error } = await client
+    .from("album_photos")
+    .select("id, album_id, path, caption, width, height, sort, created_at, albums!inner(tenant_id, is_published)")
+    .eq("albums.tenant_id", tenantId)
+    .eq("albums.is_published", true)
+    .order("sort", { ascending: true });
+  if (error) {
+    throw error;
+  }
+  return (data ?? []) as unknown as AlbumPhotoRow[];
+}
+
+export function usePublishedPhotos(
+  client: PoplabClient,
+  tenantId: string,
+): UseQueryResult<AlbumPhotoRow[]> {
+  return useQuery({
+    queryKey: publishedPhotosQueryKey(tenantId),
+    queryFn: () => fetchPublishedPhotos(client, tenantId),
+    enabled: Boolean(tenantId),
+  });
+}

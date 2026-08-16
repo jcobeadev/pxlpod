@@ -4,7 +4,7 @@ export { StartSessionHeroVideo } from "./StartSessionHeroVideo";
 export { TemplatesRow } from "./TemplatesRow";
 export { RecentStripsRow } from "./RecentStripsRow";
 export { PastEventsRow } from "./PastEventsRow";
-export { PortfolioRow } from "./PortfolioRow";
+export { PortfolioMarquee } from "./PortfolioMarquee";
 export { UpcomingEvents } from "./UpcomingEvents";
 export { BookUsCta } from "./BookUsCta";
 export { HomeLoading } from "./HomeLoading";
