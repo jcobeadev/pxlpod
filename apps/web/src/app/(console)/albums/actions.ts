@@ -18,6 +18,14 @@ export async function createAlbum(formData: FormData) {
   redirect(`/albums/${data.id}`);
 }
 
+export async function renameAlbum(id: string, title: string) {
+  const supabase = await createClient();
+  const clean = title.trim() || "Untitled album";
+  await supabase.from("albums").update({ title: clean }).eq("id", id);
+  revalidatePath(`/albums/${id}`);
+  revalidatePath("/albums");
+}
+
 export async function setAlbumPublished(id: string, published: boolean) {
   const supabase = await createClient();
   await supabase.from("albums").update({ is_published: published }).eq("id", id);

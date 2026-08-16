@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "../../../../lib/auth";
 import { createClient } from "../../../../lib/supabase/server";
+import { AlbumTitle } from "./album-title";
 import { AlbumEditor } from "./album-editor";
 
 export default async function AlbumDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +27,7 @@ export default async function AlbumDetail({ params }: { params: Promise<{ id: st
     <div className="p-8">
       <Link href="/albums" className="text-[12px] font-bold uppercase tracking-wide text-[#7a736a]">← Albums</Link>
       <div className="flex items-center gap-3 mt-2 mb-6">
-        <h1 className="font-display text-4xl uppercase">{album.title}</h1>
+        <AlbumTitle id={album.id} initial={album.title} />
         <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-1 ${album.is_published ? "bg-[#e4f0e8] text-[#2e7d52]" : "bg-[#e8e8e5] text-[#7a736a]"}`}>
           {album.is_published ? "Live" : "Draft"}
         </span>

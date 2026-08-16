@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "../../../../lib/auth";
 import { createClient } from "../../../../lib/supabase/server";
@@ -20,7 +21,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Events</p>
+          <Link href="/events" className="text-[12px] font-bold uppercase tracking-wide text-[#7a736a]">← Events</Link>
           <h1 className="font-display text-4xl uppercase mt-1">Edit event</h1>
         </div>
         <DeleteEventButton id={event.id} />

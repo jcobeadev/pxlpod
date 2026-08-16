@@ -7,7 +7,7 @@ import { TemplateSchema, shotCount, type Template } from "@poplab/template-spec"
 
 export interface NewTemplateInput {
   name: string;
-  category: "strip" | "combo" | "classic" | "fisheye";
+  category: string;
   overlayPath: string; // already uploaded to the overlays bucket
   canvas: { width: number; height: number };
   slots: {
@@ -76,7 +76,7 @@ export async function createTemplate(input: NewTemplateInput) {
     .insert({
       tenant_id: staff.tenantId,
       name: input.name,
-      category: input.category,
+      category: input.category.trim().toLowerCase(),
       spec: parsed.data,
       shot_count: shotCount(parsed.data),
       printable: true,

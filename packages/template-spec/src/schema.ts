@@ -180,8 +180,16 @@ export const GifSchema = z.object({
 
 /* --------------------------------------------------------------- template */
 
-export const TemplateCategory = z.enum(["strip", "combo", "classic", "fisheye"]);
-export type TemplateCategory = z.infer<typeof TemplateCategory>;
+/**
+ * The built-in categories the app's filter chips key off. Operators may also
+ * define their own — a custom category (e.g. "keychain") is a free string and
+ * simply falls under the "All" chip in the app.
+ */
+export const KNOWN_CATEGORIES = ["strip", "combo", "classic", "fisheye"] as const;
+export type KnownCategory = (typeof KNOWN_CATEGORIES)[number];
+/** Any non-empty category string; not restricted to the built-ins. */
+export const TemplateCategory = z.string().min(1);
+export type TemplateCategory = string;
 
 export const TemplateSchema = z
   .object({

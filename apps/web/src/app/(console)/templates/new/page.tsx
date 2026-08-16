@@ -6,7 +6,7 @@ import { createClient } from "../../../../lib/supabase/client";
 import { detectSlots } from "../../../../lib/detect-slots";
 import { createTemplate } from "./actions";
 
-type Category = "strip" | "combo" | "classic" | "fisheye";
+const PRESET_CATEGORIES = ["strip", "combo", "classic", "fisheye"];
 
 /**
  * New template from artwork: upload an overlay PNG (with transparent photo
@@ -17,7 +17,8 @@ type Category = "strip" | "combo" | "classic" | "fisheye";
 export default function NewTemplatePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<Category>("strip");
+  const [category, setCategory] = useState("strip");
+  const [shots, setShots] = useState(4);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -63,12 +64,18 @@ export default function NewTemplatePage() {
       setDetected(slots.length);
       if (slots.length === 0) throw new Error("No transparent photo windows found in this artwork.");
 
+      // A session can only capture 1–8 shots, but a template may have far more
+      // windows (a keychain sheet repeats a few shots many times). Cycle the
+      // windows through `shots` photos so the distinct count stays valid; the
+      // operator refines the exact mapping per-window in the editor.
+      const nShots = Math.min(Math.max(shots, 1), Math.min(8, slots.length));
+
       const res = await createTemplate({
         name: name || "Untitled template",
         category,
         overlayPath,
         canvas: { width, height },
-        slots: slots.map((s) => ({ id: s.id, photoIndex: s.photoIndex, x: s.x, y: s.y, w: s.w, h: s.h, shape: s.shape })),
+        slots: slots.map((s, i) => ({ id: s.id, photoIndex: i % nShots, x: s.x, y: s.y, w: s.w, h: s.h, shape: s.shape })),
       });
       if (res && !res.ok) throw new Error(res.error);
     } catch (e) {
@@ -104,15 +111,37 @@ export default function NewTemplatePage() {
           <input value={name} onChange={(e) => setName(e.target.value)} className="border border-[#14140f] px-3 py-2.5 bg-white" placeholder="Single strip" />
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Category</span>
-          <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className="border border-[#14140f] px-3 py-2.5 bg-white w-48">
-            <option value="strip">Strip</option>
-            <option value="combo">Combo</option>
-            <option value="classic">Classic</option>
-            <option value="fisheye">Fish-eye</option>
-          </select>
-        </label>
+        <div className="flex gap-4">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Category</span>
+            <input
+              list="category-presets"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="border border-[#14140f] px-3 py-2.5 bg-white w-48"
+              placeholder="strip, keychain…"
+            />
+            <datalist id="category-presets">
+              {PRESET_CATEGORIES.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+            <span className="text-[11px] text-[#7a736a]">Type your own to add a new one.</span>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#7a736a]">Shots</span>
+            <input
+              type="number"
+              min={1}
+              max={8}
+              value={shots}
+              onChange={(e) => setShots(Number(e.target.value))}
+              className="border border-[#14140f] px-3 py-2.5 bg-white w-24"
+            />
+            <span className="text-[11px] text-[#7a736a]">Photos per session (1–8). Extra windows repeat these.</span>
+          </label>
+        </div>
 
         {detected !== null ? <p className="text-[13px] text-[#8a570d]">Detected {detected} windows.</p> : null}
         {error ? <p className="text-[14px] text-[#a33418] font-semibold border border-[#a33418] bg-[#f7e6e0] px-4 py-3">{error}</p> : null}
