@@ -22,6 +22,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
           <NavLink href="/">Dashboard</NavLink>
           <NavLink href="/templates">Templates</NavLink>
           <NavLink href="/events">Events</NavLink>
+          <NavLink href="/content">Content</NavLink>
         </nav>
 
         <div className="mt-auto p-4 border-t border-[#d8d4ca]">
