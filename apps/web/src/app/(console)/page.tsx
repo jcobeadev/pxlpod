@@ -7,23 +7,36 @@ export default async function Dashboard() {
   const staff = await requireStaff();
   const supabase = await createClient();
 
-  const [{ count: templateCount }, { count: publishedCount }, { data: events }, { data: liveEvents }] =
-    await Promise.all([
-      supabase.from("templates").select("*", { count: "exact", head: true }).eq("tenant_id", staff.tenantId),
-      supabase
-        .from("templates")
-        .select("*", { count: "exact", head: true })
-        .eq("tenant_id", staff.tenantId)
-        .eq("status", "published"),
-      supabase
-        .from("events")
-        .select("id, title, starts_at, ends_at, city, is_published")
-        .eq("tenant_id", staff.tenantId)
-        .gte("ends_at", new Date().toISOString())
-        .order("starts_at", { ascending: true })
-        .limit(5),
-      supabase.rpc("live_events", { target_tenant: staff.tenantId }),
-    ]);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const [
+    { count: templateCount },
+    { count: publishedCount },
+    { data: events },
+    { data: liveEvents },
+    { count: captureCount },
+    { count: captureWeek },
+  ] = await Promise.all([
+    supabase.from("templates").select("*", { count: "exact", head: true }).eq("tenant_id", staff.tenantId),
+    supabase
+      .from("templates")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", staff.tenantId)
+      .eq("status", "published"),
+    supabase
+      .from("events")
+      .select("id, title, starts_at, ends_at, city, is_published")
+      .eq("tenant_id", staff.tenantId)
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(5),
+    supabase.rpc("live_events", { target_tenant: staff.tenantId }),
+    supabase.from("sessions").select("*", { count: "exact", head: true }).eq("tenant_id", staff.tenantId),
+    supabase
+      .from("sessions")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", staff.tenantId)
+      .gte("completed_at", weekAgo),
+  ]);
 
   const live = liveEvents?.[0] ?? null;
 
@@ -39,10 +52,14 @@ export default async function Dashboard() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-3">
         <Stat label="Templates" value={templateCount ?? 0} />
         <Stat label="Published" value={publishedCount ?? 0} />
         <Stat label="Upcoming events" value={events?.length ?? 0} />
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <Stat label="Strips shot (all time)" value={captureCount ?? 0} />
+        <Stat label="Strips shot (7 days)" value={captureWeek ?? 0} />
       </div>
 
       <section className="bg-white border border-[#14140f]">

@@ -39,6 +39,7 @@ export default function DeliveryHub() {
   const variant = useSession((s) => s.variant);
   const filterId = useSession((s) => s.filterId);
   const outputKind = useSession((s) => s.outputKind);
+  const shotCount = useSession((s) => s.shotCount);
   const { uri, isComposing } = useComposite();
   const liveEventQuery = useLiveEvent(client, TENANT_ID);
   const liveEvent = liveEventQuery.data ?? null;
@@ -46,6 +47,7 @@ export default function DeliveryHub() {
 
   const [saving, setSaving] = useState(false);
   const committed = useRef(false);
+  const logged = useRef(false);
 
   const ready = Boolean(uri) && !isComposing;
 
@@ -64,6 +66,28 @@ export default function DeliveryHub() {
       committed.current = false;
     });
   }, [ready, uri, template, outputKind, filterId, commit]);
+
+  // Record one anonymous capture-session row for the operator's dashboard, once
+  // per finished strip. Fire-and-forget: analytics must never block delivery, so
+  // any failure (offline, RLS, a stale template id) is swallowed.
+  useEffect(() => {
+    if (logged.current || !ready || !template) return;
+    logged.current = true;
+    void (async () => {
+      try {
+        await client.rpc("log_session", {
+          p_tenant_id: TENANT_ID,
+          p_event_id: liveEvent?.id ?? undefined,
+          p_template_id: template.id,
+          p_variant: variant?.label ?? undefined,
+          p_filter_id: filterId ?? undefined,
+          p_shot_count: shotCount(),
+        });
+      } catch {
+        // analytics is best-effort — never surface to the guest
+      }
+    })();
+  }, [ready, template, liveEvent, variant, filterId, shotCount, client]);
 
   if (!template) {
     router.replace("/session");

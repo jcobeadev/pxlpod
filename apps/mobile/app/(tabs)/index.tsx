@@ -21,10 +21,6 @@ import { usePoplabClient } from "../_layout";
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
 
-// Trial: show the looping-video Start-session tile instead of the flat one.
-// Flip to false to go back to the original.
-const USE_VIDEO_HERO = true;
-
 // 04 Home / 04b Home loading / 04c Home offline / 04d Home scrolled
 // (design/PXLPOD App.dc.html).
 //
@@ -74,6 +70,7 @@ export default function HomeTab() {
   // RLS already returns only published albums to a guest, but filter defensively.
   const albums = (albumsQuery.data ?? []).filter((a) => a.is_published);
   const heroCaption = (contentQuery.data?.hero as { body?: string } | undefined)?.body;
+  const useVideoHero = (contentQuery.data?.home_hero_video as { body?: string } | undefined)?.body === "on";
   // "Upcoming" includes the pop-up that's live right now (its window hasn't
   // closed yet) — the live banner already covers that one, so it's excluded
   // here to avoid showing the same event twice.
@@ -88,7 +85,7 @@ export default function HomeTab() {
           <LiveBanner eventTitle={liveEvent.title} onDismiss={() => setDismissedLiveEventId(liveEvent.id)} />
         ) : null}
 
-        {USE_VIDEO_HERO ? (
+        {useVideoHero ? (
           <StartSessionHeroVideo onPress={() => router.push("/session")} caption={heroCaption} />
         ) : (
           <StartSessionHero onPress={() => router.push("/session")} caption={heroCaption} />
@@ -106,6 +103,7 @@ export default function HomeTab() {
           albums={albums}
           resolveCover={resolveCover}
           onOpen={(id) => router.push(`/portfolio/${id}`)}
+          onSeeAll={() => router.push("/portfolio")}
         />
 
         <PastEventsRow events={pastEvents} resolveCover={resolveCover} />

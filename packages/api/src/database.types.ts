@@ -846,6 +846,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      log_session: {
+        Args: {
+          p_event_id?: string
+          p_filter_id?: string
+          p_shot_count?: number
+          p_template_id?: string
+          p_tenant_id: string
+          p_variant?: string
+        }
+        Returns: undefined
+      }
       purge_expired: {
         Args: never
         Returns: {

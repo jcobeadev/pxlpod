@@ -84,6 +84,7 @@ export default function RootLayout() {
                 hidden while shooting; the session store outlives each screen. */}
             <Stack.Screen name="session" options={{ presentation: "card", animation: "slide_from_right" }} />
             <Stack.Screen name="strip/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
+            <Stack.Screen name="portfolio/index" options={{ presentation: "card", animation: "slide_from_right" }} />
             <Stack.Screen name="portfolio/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
             <Stack.Screen name="book" options={{ presentation: "card", animation: "slide_from_bottom" }} />
             <Stack.Screen name="more" options={{ presentation: "card", animation: "slide_from_bottom" }} />
