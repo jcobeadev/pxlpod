@@ -19,7 +19,11 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.85.0",
     "sharp": "^0.35.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@poplab/api": "workspace:*",
+    "@poplab/template-spec": "workspace:*",
+    "react-konva": "^19.0.3",
+    "konva": "^9.3.16"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

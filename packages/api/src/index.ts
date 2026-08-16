@@ -11,6 +11,7 @@
  * where its single `PoplabClient` instance lives.
  */
 
+export type { Database } from "./database.types.ts";
 export * from "./client.ts";
 export * from "./auth.ts";
 export * from "./storage.ts";
