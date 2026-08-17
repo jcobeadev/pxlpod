@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 const UPDATED = "August 17, 2026";
 const OPERATOR = "PXLPOD Photobooth";
-const CONTACT = "hello@pxlpod.example"; // TODO: real support inbox before launch
+const CONTACT = "pxlpodbooth@gmail.com";
 
 export default function TermsPage() {
   return (

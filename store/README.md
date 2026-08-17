@@ -16,9 +16,9 @@ profiles in `apps/mobile/eas.json`. Listing copy is in this folder.
 > routes `/privacy`, `/terms`, `/support`), now deployed on Vercel. If you move to
 > a custom domain later, update `EXPO_PUBLIC_WEB_URL` (see below) and these URLs.
 
-> **Before submitting**, replace the placeholder support email
-> `hello@pxlpod.example` in `apps/web/src/app/{privacy,terms,support}/page.tsx`
-> (and `legal/*.md`) with a real inbox — reviewers do check the support contact.
+> Support contact is `pxlpodbooth@gmail.com` (set in the privacy/terms/support
+> pages, `legal/*.md`, and the store metadata). Update all of them together if it
+> ever changes — reviewers do check the support contact.
 
 ## 0. Before you build
 

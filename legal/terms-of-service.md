@@ -31,4 +31,4 @@ anything important.
 
 ## Contact
 
-Questions about these terms? Email **hello@pxlpod.example**.
+Questions about these terms? Email **pxlpodbooth@gmail.com**.

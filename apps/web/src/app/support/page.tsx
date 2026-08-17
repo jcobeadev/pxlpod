@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 // Public, unauthenticated support page — the support URL the app stores require.
 // Update the contact email before launch.
-const CONTACT = "hello@pxlpod.example"; // TODO: real support inbox before launch
+const CONTACT = "pxlpodbooth@gmail.com";
 
 export default function SupportPage() {
   return (

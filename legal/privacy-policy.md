@@ -16,7 +16,7 @@ your phone when you choose to share it, create a share link, or send it to print
 ## Who we are
 
 PXLPOD Photobooth operates the pop-up photobooth and this app. We are responsible
-for the personal data described here. Questions? Email **hello@pxlpod.example**.
+for the personal data described here. Questions? Email **pxlpodbooth@gmail.com**.
 
 ## What we collect, and when
 
@@ -58,7 +58,7 @@ our infrastructure provider, Supabase, on our behalf.
 - Delete every strip the app holds at any time from the More screen.
 - Revoke camera, photos, or location permission in your phone's Settings.
 - Ask us to access or delete a booking inquiry, or a strip you shared or sent to
-  print, by emailing **hello@pxlpod.example**.
+  print, by emailing **pxlpodbooth@gmail.com**.
 
 ## Children
 
@@ -70,4 +70,4 @@ submitted by an adult.
 We'll update this page if our handling changes and revise the date above.
 Continued use after a change means you accept the updated policy.
 
-Contact: **hello@pxlpod.example**
+Contact: **pxlpodbooth@gmail.com**
