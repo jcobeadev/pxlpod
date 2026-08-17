@@ -168,7 +168,7 @@ function Field({
           paddingHorizontal: 14,
           paddingVertical: 12,
           fontSize: 15,
-          fontFamily: "Archivo",
+          fontFamily: "Poppins-Regular",
           color: colors.ink,
           minHeight: multiline ? 90 : undefined,
           textAlignVertical: multiline ? "top" : "center",

@@ -34,7 +34,7 @@ export function TemplatesRow({ templates, resolveThumbnail, onSeeAll, onSelect }
   return (
     <View style={{ gap: 12 }}>
       <View style={{ marginHorizontal: 22, flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
-        <Text weight="bold" style={{ fontSize: 12, letterSpacing: 2.16, textTransform: "uppercase" }}>
+        <Text variant="subheading" style={{ fontSize: 13, letterSpacing: 1.4, textTransform: "uppercase" }}>
           Newly added
         </Text>
         <Pressable onPress={onSeeAll} hitSlop={8}>

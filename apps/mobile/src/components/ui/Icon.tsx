@@ -3,6 +3,7 @@ import { Canvas, Circle, Group, Path, RoundedRect } from "@shopify/react-native-
 
 import { colors } from "../../theme/tokens";
 import { Text } from "./Text";
+import { ShutterMark } from "./ShutterMark";
 
 export type IconName = "home" | "templates" | "myPhotos" | "findUs" | "camera" | "alert";
 
@@ -175,28 +176,7 @@ export function Icon({ name, active = false, size = 22 }: IconProps) {
     case "findUs":
       return <TabGlyph name={name} active={active} size={size} />;
     case "camera":
-      return (
-        <View
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            backgroundColor: colors.ink,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <View
-            style={{
-              width: size * 0.38,
-              height: size * 0.38,
-              borderRadius: (size * 0.38) / 2,
-              borderWidth: 3,
-              borderColor: colors.amber,
-            }}
-          />
-        </View>
-      );
+      return <ShutterMark size={size} />;
     case "alert":
       return (
         <View

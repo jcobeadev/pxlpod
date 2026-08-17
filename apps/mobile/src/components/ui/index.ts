@@ -6,3 +6,4 @@ export { Screen } from "./Screen";
 export type { ScreenProps } from "./Screen";
 export { Icon } from "./Icon";
 export type { IconProps, IconName } from "./Icon";
+export { ShutterMark } from "./ShutterMark";

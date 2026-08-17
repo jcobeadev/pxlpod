@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 
-import { Text } from "../ui";
+import { Text, ShutterMark } from "../ui";
 import { colors } from "../../theme/tokens";
 
 export interface StartSessionHeroProps {
@@ -64,15 +64,7 @@ export function StartSessionHero({ onPress, caption }: StartSessionHeroProps) {
             justifyContent: "center",
           }}
         >
-          <View
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              borderWidth: 3.5,
-              borderColor: colors.ink,
-            }}
-          />
+          <ShutterMark size={38} />
         </View>
       </Pressable>
 

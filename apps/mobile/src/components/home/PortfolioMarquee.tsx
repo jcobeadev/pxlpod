@@ -60,7 +60,7 @@ export function PortfolioMarquee({ photos, resolvePhoto, onSeeAll }: PortfolioMa
   return (
     <View style={{ gap: 10 }}>
       <View style={{ marginHorizontal: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text weight="bold" style={{ fontSize: 12, letterSpacing: 2.16, textTransform: "uppercase" }}>
+        <Text variant="subheading" style={{ fontSize: 13, letterSpacing: 1.4, textTransform: "uppercase" }}>
           Portfolio
         </Text>
         <Pressable onPress={onSeeAll} hitSlop={8} accessibilityRole="button" accessibilityLabel="See all portfolio photos">

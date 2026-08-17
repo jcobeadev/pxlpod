@@ -46,7 +46,7 @@ export default function FinishingTouches() {
             placeholder="night market, 11 pm"
             placeholderTextColor={colors.faint.DEFAULT}
             maxLength={40}
-            style={{ borderWidth: 1, borderColor: colors.ink, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, fontFamily: "Archivo", color: colors.ink }}
+            style={{ borderWidth: 1, borderColor: colors.ink, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, fontFamily: "Poppins-Regular", color: colors.ink }}
           />
         </View>
 

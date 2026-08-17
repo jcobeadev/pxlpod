@@ -3,7 +3,7 @@ import { Tabs, useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon, type IconName, Text } from "../../src/components/ui";
+import { Icon, type IconName, ShutterMark, Text } from "../../src/components/ui";
 import { colors } from "../../src/theme";
 
 // 03 Tab shell (design/PXLPOD App.dc.html) — header + content area + tab bar.
@@ -71,7 +71,7 @@ function ShellHeader() {
           accessibilityLabel="Start session"
           style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: colors.ink, alignItems: "center", justifyContent: "center" }}
         >
-          <View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.ink }} />
+          <ShutterMark size={18} />
         </Pressable>
         {/* Right button: More (about, settings, privacy). */}
         <Pressable

@@ -42,7 +42,7 @@ export function UpcomingEvents({ events, max = 3 }: UpcomingEventsProps) {
 
   return (
     <View style={{ marginHorizontal: 22, gap: 12 }}>
-      <Text weight="bold" style={{ fontSize: 12, letterSpacing: 2.16, textTransform: "uppercase" }}>
+      <Text variant="subheading" style={{ fontSize: 13, letterSpacing: 1.4, textTransform: "uppercase" }}>
         Where we&apos;ll be next
       </Text>
       {upcoming.length === 0 ? (

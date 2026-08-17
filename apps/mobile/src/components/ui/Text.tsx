@@ -3,15 +3,16 @@ import { Text as RNText, type TextProps as RNTextProps } from "react-native";
 import { colors } from "../../theme/tokens";
 import { fontFamily, type BodyWeight } from "../../theme/fonts";
 
-export type TextVariant = "display" | "body";
+export type TextVariant = "display" | "subheading" | "body";
 
 export interface TextProps extends RNTextProps {
   /**
-   * `display` renders Archivo Black (headlines). `body` renders Archivo at
-   * the given `weight`. Defaults to `body`.
+   * `display` renders Anton (headlines). `subheading` renders Antonio (section
+   * labels / secondary headers). `body` renders Poppins at the given `weight`.
+   * Defaults to `body`.
    */
   variant?: TextVariant;
-  /** Ignored when `variant="display"` — Archivo Black has no other weights. */
+  /** Only applies to `variant="body"` — Anton/Antonio have a single weight. */
   weight?: BodyWeight;
 }
 
@@ -21,7 +22,12 @@ export interface TextProps extends RNTextProps {
  * cases like white text on the dark splash screen.
  */
 export function Text({ variant = "body", weight = "regular", style, ...rest }: TextProps) {
-  const family = variant === "display" ? fontFamily.display : fontFamily[weight];
+  const family =
+    variant === "display"
+      ? fontFamily.display
+      : variant === "subheading"
+        ? fontFamily.subheading
+        : fontFamily[weight];
 
   return <RNText {...rest} style={[{ fontFamily: family, color: colors.ink }, style]} />;
 }

@@ -8,9 +8,10 @@
 import { fontFamily } from "./fonts";
 
 export const fontAssets = {
-  [fontFamily.regular]: require("../../assets/fonts/Archivo-Regular.ttf"),
-  [fontFamily.medium]: require("../../assets/fonts/Archivo-Medium.ttf"),
-  [fontFamily.semibold]: require("../../assets/fonts/Archivo-SemiBold.ttf"),
-  [fontFamily.bold]: require("../../assets/fonts/Archivo-Bold.ttf"),
-  [fontFamily.display]: require("../../assets/fonts/ArchivoBlack-Regular.ttf"),
+  [fontFamily.regular]: require("../../assets/fonts/Poppins-Regular.ttf"),
+  [fontFamily.medium]: require("../../assets/fonts/Poppins-Medium.ttf"),
+  [fontFamily.semibold]: require("../../assets/fonts/Poppins-SemiBold.ttf"),
+  [fontFamily.bold]: require("../../assets/fonts/Poppins-Bold.ttf"),
+  [fontFamily.display]: require("../../assets/fonts/Anton-Regular.ttf"),
+  [fontFamily.subheading]: require("../../assets/fonts/Antonio-SemiBold.ttf"),
 } as const;

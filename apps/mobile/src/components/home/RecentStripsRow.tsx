@@ -20,7 +20,7 @@ export function RecentStripsRow() {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ marginHorizontal: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text weight="bold" style={{ fontSize: 12, letterSpacing: 2.16, textTransform: "uppercase" }}>
+        <Text variant="subheading" style={{ fontSize: 13, letterSpacing: 1.4, textTransform: "uppercase" }}>
           Your recent strips
         </Text>
         {recent.length > 0 ? (
