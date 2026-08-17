@@ -37,6 +37,17 @@ export function AlbumEditor({
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  const readImageSize = async (file: File): Promise<{ width: number; height: number } | null> => {
+    try {
+      const bmp = await createImageBitmap(file);
+      const dims = { width: bmp.width, height: bmp.height };
+      bmp.close();
+      return dims;
+    } catch {
+      return null; // undecodable here (e.g. HEIC) — the app falls back to a default ratio
+    }
+  };
+
   const onFiles = async (files: FileList) => {
     setUploading(true);
     setError(null);
@@ -50,7 +61,10 @@ export function AlbumEditor({
           upsert: false,
         });
         if (upErr) throw new Error(upErr.message);
-        await addAlbumPhoto(albumId, path);
+        // Capture pixel dimensions so the app can lay photos out by aspect
+        // ratio (portfolio masonry / marquee) without cropping.
+        const dims = await readImageSize(file);
+        await addAlbumPhoto(albumId, path, dims?.width, dims?.height);
         setPhotos((p) => [...p, { id: `tmp-${path}`, path }]);
       }
       router.refresh();
