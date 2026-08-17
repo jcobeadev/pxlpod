@@ -45,6 +45,7 @@
     "production": {
       "ios": {
         "appleTeamId": "53HHS3Z88H",
+        "appleId": "jcobea.dev@gmail.com",
         "ascAppId": "6802399306"
       },
       "android": {
