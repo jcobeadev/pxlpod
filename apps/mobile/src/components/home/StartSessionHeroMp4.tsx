@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { StyleSheet, Pressable, useWindowDimensions, View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 
@@ -32,12 +33,20 @@ export default function StartSessionHeroMp4({ onPress, caption }: StartSessionHe
     p.play();
   });
 
+  // Belt-and-suspenders: also start playback after mount. iOS may leave a
+  // muted autoplay video paused (notably in Low Power Mode); nudging play()
+  // here recovers it whenever the OS allows.
+  useEffect(() => {
+    player.play();
+  }, [player]);
+
   return (
     <View style={{ marginHorizontal: 22, gap: 12 }}>
       <View style={{ width: tileWidth, height: tileHeight, backgroundColor: colors.ink, overflow: "hidden" }}>
         <VideoView
           player={player}
           nativeControls={false}
+          allowsVideoFrameAnalysis={false}
           contentFit="cover"
           style={{ width: tileWidth, height: tileHeight }}
         />
