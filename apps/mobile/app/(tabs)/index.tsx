@@ -58,6 +58,13 @@ export default function HomeTab() {
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
     [client],
   );
+  // Small, fast-loading version for the portfolio marquee (full-size loads on
+  // tap, in the gallery). Supabase image transform — width-capped + compressed.
+  const resolvePhotoThumb = useMemo(
+    () => (path: string) =>
+      client.storage.from("albums").getPublicUrl(path, { transform: { width: 320, quality: 60 } }).data.publicUrl,
+    [client],
+  );
 
   const queries = [liveEventQuery, templatesQuery, upcomingQuery, pastQuery];
   const allPending = queries.every((query) => query.isPending);
@@ -134,7 +141,7 @@ export default function HomeTab() {
 
         <PortfolioMarquee
           photos={portfolioPhotos}
-          resolvePhoto={resolveCover}
+          resolvePhoto={resolvePhotoThumb}
           onSeeAll={() => router.push("/portfolio")}
         />
 

@@ -34,7 +34,13 @@ export default function PortfolioIndex() {
     }
   }, [photosQuery]);
 
-  const resolve = useMemo(
+  // Grid shows a small, fast transform; tapping opens the full-resolution image.
+  const resolveThumb = useMemo(
+    () => (path: string) =>
+      client.storage.from("albums").getPublicUrl(path, { transform: { width: 400, quality: 60 } }).data.publicUrl,
+    [client],
+  );
+  const resolveFull = useMemo(
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
     [client],
   );
@@ -63,8 +69,8 @@ export default function PortfolioIndex() {
         ) : (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap }}>
             {photos.map((p) => (
-              <Pressable key={p.id} onPress={() => setZoom(resolve(p.path))}>
-                <Image source={{ uri: resolve(p.path) }} style={{ width: size, height: size, backgroundColor: colors.surface["3"] }} resizeMode="cover" />
+              <Pressable key={p.id} onPress={() => setZoom(resolveFull(p.path))}>
+                <Image source={{ uri: resolveThumb(p.path) }} style={{ width: size, height: size, backgroundColor: colors.surface["3"] }} resizeMode="cover" />
               </Pressable>
             ))}
           </View>

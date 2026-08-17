@@ -31,7 +31,13 @@ export default function AlbumDetail() {
   const album = (albumsQuery.data ?? []).find((a) => a.id === id) ?? null;
   const photos = photosQuery.data ?? [];
 
-  const resolve = useMemo(
+  // Grid uses a small transform; the full image loads on tap.
+  const resolveThumb = useMemo(
+    () => (path: string) =>
+      client.storage.from("albums").getPublicUrl(path, { transform: { width: 500, quality: 60 } }).data.publicUrl,
+    [client],
+  );
+  const resolveFull = useMemo(
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
     [client],
   );
@@ -62,9 +68,9 @@ export default function AlbumDetail() {
             {photos.map((p) => {
               const ratio = p.width && p.height ? p.height / p.width : 1.5;
               return (
-                <Pressable key={p.id} onPress={() => setZoom(resolve(p.path))}>
+                <Pressable key={p.id} onPress={() => setZoom(resolveFull(p.path))}>
                   <Image
-                    source={{ uri: resolve(p.path) }}
+                    source={{ uri: resolveThumb(p.path) }}
                     style={{ width: colWidth, height: colWidth * ratio, backgroundColor: "#1c1c19" }}
                     resizeMode="cover"
                   />
