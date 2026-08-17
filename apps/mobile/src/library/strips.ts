@@ -68,11 +68,23 @@ interface Row {
   created_at: number;
 }
 
+// The `uri` column holds only the file NAME, not an absolute path. iOS changes
+// the app's container UUID on reinstall/update, so an absolute
+// /var/mobile/Containers/.../<UUID>/Documents/... path saved by a previous build
+// no longer resolves — the strips look "missing" even though the files survive
+// in Documents. Rebuilding the path against the current Documents dir at read
+// time fixes that. `split("/").pop()` also recovers the name from any legacy row
+// that still stored a full path.
+function fileFor(stored: string): File {
+  const name = stored.split("/").pop() ?? stored;
+  return new File(stripsDir(), name);
+}
+
 const toRecord = (r: Row): StripRecord => ({
   id: r.id,
   templateId: r.template_id,
   templateName: r.template_name,
-  uri: r.uri,
+  uri: fileFor(r.uri).uri,
   outputKind: r.output_kind,
   filterId: r.filter_id,
   createdAt: r.created_at,
@@ -93,7 +105,8 @@ export async function commitStrip(
   meta: { templateId: string | null; templateName: string; outputKind: string; filterId: string },
 ): Promise<StripRecord> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const dest = new File(stripsDir(), `${id}.jpg`);
+  const fileName = `${id}.jpg`;
+  const dest = new File(stripsDir(), fileName);
 
   const buffer = await new File(sourceUri).arrayBuffer();
   // create() throws FileAlreadyExists if the path is taken; the id is unique, but
@@ -106,15 +119,16 @@ export async function commitStrip(
     id,
     templateId: meta.templateId,
     templateName: meta.templateName,
-    uri: dest.uri,
+    uri: dest.uri, // absolute, for immediate display this session
     outputKind: meta.outputKind,
     filterId: meta.filterId,
     createdAt: Date.now(),
   };
 
+  // Store only the file name — see fileFor(): absolute paths break on reinstall.
   await (await db()).runAsync(
     "INSERT INTO strips (id, template_id, template_name, uri, output_kind, filter_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [record.id, record.templateId, record.templateName, record.uri, record.outputKind, record.filterId, record.createdAt],
+    [record.id, record.templateId, record.templateName, fileName, record.outputKind, record.filterId, record.createdAt],
   );
 
   return record;
@@ -122,10 +136,10 @@ export async function commitStrip(
 
 export async function deleteStrip(id: string): Promise<void> {
   const rows = await (await db()).getAllAsync<Row>("SELECT uri FROM strips WHERE id = ?", [id]);
-  const uri = rows[0]?.uri;
-  if (uri) {
+  const stored = rows[0]?.uri;
+  if (stored) {
     try {
-      const file = new File(uri);
+      const file = fileFor(stored);
       if (file.exists) file.delete();
     } catch {
       // File already gone — the row removal below is what matters.
