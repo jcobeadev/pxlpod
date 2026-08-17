@@ -41,3 +41,23 @@ minimumReleaseAgeExclude:
 overrides:
   react: 19.2.3
   react-dom: 19.2.3
+  # Pin one Metro for the whole workspace. Expo SDK 57 (@expo/metro-config)
+  # wants metro ^0.84.3, but react-native 0.86's @react-native/metro-config
+  # drags in metro 0.87 — so both got installed. The dev server happened to load
+  # 0.84, but the production `expo export:embed` mixed a 0.87 metro-transform-
+  # worker with 0.84 metro and failed with "Cannot read properties of undefined
+  # (reading 'transformFile')". Force the entire suite to Expo's 0.84.4.
+  metro: 0.84.4
+  metro-babel-transformer: 0.84.4
+  metro-cache: 0.84.4
+  metro-cache-key: 0.84.4
+  metro-config: 0.84.4
+  metro-core: 0.84.4
+  metro-file-map: 0.84.4
+  metro-minify-terser: 0.84.4
+  metro-resolver: 0.84.4
+  metro-runtime: 0.84.4
+  metro-source-map: 0.84.4
+  metro-symbolicate: 0.84.4
+  metro-transform-plugins: 0.84.4
+  metro-transform-worker: 0.84.4
