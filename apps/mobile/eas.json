@@ -23,13 +23,21 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_TENANT_SLUG": "pxlpod"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://plvosxnepmhbamjpjoxr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_n8VTW5AZeQ1f3DlYOeEplg_Qr3_VOLV",
+        "EXPO_PUBLIC_TENANT_ID": "9e605b70-4e7f-4aec-ade9-84c20b69d20d",
+        "EXPO_PUBLIC_TENANT_SLUG": "pxlpod",
+        "EXPO_PUBLIC_WEB_URL": "https://pxlpod.vercel.app"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_TENANT_SLUG": "pxlpod"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://plvosxnepmhbamjpjoxr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_n8VTW5AZeQ1f3DlYOeEplg_Qr3_VOLV",
+        "EXPO_PUBLIC_TENANT_ID": "9e605b70-4e7f-4aec-ade9-84c20b69d20d",
+        "EXPO_PUBLIC_TENANT_SLUG": "pxlpod",
+        "EXPO_PUBLIC_WEB_URL": "https://pxlpod.vercel.app"
       }
     }
   },
