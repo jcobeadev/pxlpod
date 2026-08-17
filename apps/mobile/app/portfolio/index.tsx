@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Image, Modal, Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePublishedPhotos } from "@poplab/api";
@@ -24,6 +24,15 @@ export default function PortfolioIndex() {
   const photosQuery = usePublishedPhotos(client, TENANT_ID);
   const photos = photosQuery.data ?? [];
   const [zoom, setZoom] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await photosQuery.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [photosQuery]);
 
   const resolve = useMemo(
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
@@ -43,7 +52,10 @@ export default function PortfolioIndex() {
         <Text variant="display" style={{ fontSize: 24, textTransform: "uppercase" }}>Portfolio</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} />}
+      >
         {photosQuery.isPending ? (
           <Text style={{ color: colors.muted.DEFAULT, textAlign: "center", marginTop: 40 }}>Loading…</Text>
         ) : photos.length === 0 ? (

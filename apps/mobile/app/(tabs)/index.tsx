@@ -1,5 +1,5 @@
-import { lazy, Suspense, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { requireOptionalNativeModule } from "expo";
 import { useRouter } from "expo-router";
 import { overlayUrl, useAppContent, useEvents, useLiveEvent, usePublishedPhotos, useTemplates } from "@poplab/api";
@@ -63,6 +63,20 @@ export default function HomeTab() {
   const allPending = queries.every((query) => query.isPending);
   const allErrored = queries.every((query) => query.isError);
 
+  // Pull-to-refresh refetches everything the screen shows (events, templates,
+  // portfolio photos, content), not just the gating queries.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all(
+        [liveEventQuery, templatesQuery, upcomingQuery, pastQuery, photosQuery, contentQuery].map((q) => q.refetch()),
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [liveEventQuery, templatesQuery, upcomingQuery, pastQuery, photosQuery, contentQuery]);
+
   const handleRetry = () => {
     void Promise.all(queries.map((query) => query.refetch()));
   };
@@ -90,7 +104,10 @@ export default function HomeTab() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface.DEFAULT }}>
-      <ScrollView contentContainerStyle={{ paddingTop: 6, paddingBottom: 14, gap: 22 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 6, paddingBottom: 14, gap: 22 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} />}
+      >
         {showLiveBanner && liveEvent ? (
           <LiveBanner eventTitle={liveEvent.title} onDismiss={() => setDismissedLiveEventId(liveEvent.id)} />
         ) : null}
