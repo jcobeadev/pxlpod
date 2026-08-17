@@ -66,6 +66,13 @@ The guest app collects very little. Answer as follows:
 - **Identifiers / Usage Data / Diagnostics**: **No** — the app has no analytics
   or crash SDK, and no advertising identifiers.
 
+## App Review contact information
+
+Reviewers require a contact for the "App Review Information" section:
+
+- **Email**: pxlpodbooth@gmail.com
+- **First / last name & phone**: your own (fill in App Store Connect).
+
 ## App Review notes (paste into the review notes field)
 
 ```
