@@ -1,4 +1,4 @@
-import { Text as RNText, type TextProps as RNTextProps } from "react-native";
+import { StyleSheet, Text as RNText, type TextProps as RNTextProps } from "react-native";
 
 import { colors } from "../../theme/tokens";
 import { fontFamily, type BodyWeight } from "../../theme/fonts";
@@ -16,6 +16,12 @@ export interface TextProps extends RNTextProps {
   weight?: BodyWeight;
 }
 
+// Anton (display) has very tall caps. When a caller sets `lineHeight` ≈
+// `fontSize` — which the original layout did, tuned for Archivo Black — the caps
+// clip at the top ("START" → "STARI"). Force a line box tall enough to clear
+// them, overriding any tight per-call lineHeight but keeping a taller one.
+const DISPLAY_LINE_HEIGHT_RATIO = 1.32;
+
 /**
  * Base text primitive. Defaults to ink-on-transparent; screens override
  * `color` via `style` (pulling the value from `theme`, never a raw hex) for
@@ -28,6 +34,13 @@ export function Text({ variant = "body", weight = "regular", style, ...rest }: T
       : variant === "subheading"
         ? fontFamily.subheading
         : fontFamily[weight];
+
+  if (variant === "display") {
+    const flat = StyleSheet.flatten(style) as { fontSize?: number; lineHeight?: number } | undefined;
+    const fontSize = flat?.fontSize ?? 17;
+    const lineHeight = Math.max(Math.ceil(fontSize * DISPLAY_LINE_HEIGHT_RATIO), flat?.lineHeight ?? 0);
+    return <RNText {...rest} style={[{ fontFamily: family, color: colors.ink }, style, { lineHeight }]} />;
+  }
 
   return <RNText {...rest} style={[{ fontFamily: family, color: colors.ink }, style]} />;
 }
