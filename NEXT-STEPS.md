@@ -35,10 +35,12 @@ cleanup (pg_cron, daily 02:15 Manila), capture analytics on the dashboard.
 These require adding a native module and an EAS dev-client/production rebuild, so
 they can't be verified on the current build from here:
 
-- [ ] **True `.mp4` video hero** — the current video tile is a sprite-sheet
-  animation (no native module). For real looping video add `expo-video`, host the
-  clip (e.g. a public Storage bucket), and store its URL in the console. The
-  Flat/Video toggle (Content → Start-session tile) is already in place to gate it.
+- [x] **True `.mp4` video hero** — DONE. `expo-video` added; `start-session.mp4`
+  bundled; `StartSessionHeroMp4` plays it looping/muted. Loaded lazily behind an
+  ErrorBoundary that falls back to the sprite tile on builds without the native
+  module. **Needs a dev-client rebuild** to show the real video:
+  `cd apps/mobile && eas build --profile development --platform ios`, then install
+  that build and reload. (The production/store build includes it automatically.)
 - [ ] **Motion / GIF output** — the delivery hub reserves a "SOON" slot. Needs a
   native encoder (frames → GIF/MP4) and a rebuild.
 - [ ] **Web capture booth (Phase 2)** — browser-based capture page; ports the
