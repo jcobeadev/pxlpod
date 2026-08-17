@@ -37,7 +37,7 @@
       "expo-asset"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.jcobea.pxlpod",
       "infoPlist": {
         "NSCameraUsageDescription": "PxlPod uses your camera to take your photo strip.",

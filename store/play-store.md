@@ -25,8 +25,9 @@ Paste-ready metadata for the Android listing. Fill anything in **UPPERCASE**.
   ```
 - **App category**: Photography
 - **Tags**: photo booth, photo strip, events
-- **Contact email**: SUPPORT_EMAIL_HERE
-- **Privacy Policy URL**: https://<web-domain>/privacy
+- **Contact email**: SUPPORT_EMAIL_HERE (replace placeholder before submitting)
+- **Support website**: https://pxlpod.vercel.app/support
+- **Privacy Policy URL**: https://pxlpod.vercel.app/privacy
 
 ## Content rating (IARC questionnaire)
 

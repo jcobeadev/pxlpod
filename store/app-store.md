@@ -32,9 +32,9 @@ Paste-ready metadata for the iOS listing. Fill anything in **UPPERCASE** first.
 - **Keywords** (100 char, comma-separated, no spaces):
   photobooth,photo booth,photo strip,event,party,wedding,prints,booth,pop-up,strip
 
-- **Support URL**: https://<web-domain>/  (or a support/contact page)
-- **Marketing URL** (optional): https://<web-domain>/
-- **Privacy Policy URL**: https://<web-domain>/privacy
+- **Support URL**: https://pxlpod.vercel.app/support
+- **Marketing URL** (optional): https://pxlpod.vercel.app/support
+- **Privacy Policy URL**: https://pxlpod.vercel.app/privacy
 
 ## Age rating
 

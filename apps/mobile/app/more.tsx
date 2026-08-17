@@ -93,6 +93,9 @@ export default function MoreScreen() {
           <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/terms`)}>
             <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT, textDecorationLine: "underline" }}>Terms of use</Text>
           </Pressable>
+          <Pressable onPress={() => void Linking.openURL(`${WEB_URL}/support`)}>
+            <Text style={{ fontSize: 12.5, color: colors.muted.DEFAULT, textDecorationLine: "underline" }}>Support</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
