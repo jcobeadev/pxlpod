@@ -105,6 +105,8 @@ export default function HomeTab() {
   const portfolioPhotos = photosQuery.data ?? [];
   const heroCaption = (contentQuery.data?.hero as { body?: string } | undefined)?.body;
   const useVideoHero = (contentQuery.data?.home_hero_video as { body?: string } | undefined)?.body === "on";
+  // "Newly added" (templates) is opt-in — hidden unless the console turns it on.
+  const showTemplates = (contentQuery.data?.home_templates as { body?: string } | undefined)?.body === "on";
   // "Upcoming" includes the pop-up that's live right now (its window hasn't
   // closed yet) — the live banner already covers that one, so it's excluded
   // here to avoid showing the same event twice.
@@ -134,19 +136,21 @@ export default function HomeTab() {
           <StartSessionHero onPress={() => router.push("/session")} caption={heroCaption} />
         )}
 
-        <TemplatesRow
-          templates={templates}
-          resolveThumbnail={resolveThumbnail}
-          onSeeAll={() => router.push("/templates")}
-        />
-
-        <RecentStripsRow />
-
         <PortfolioMarquee
           photos={portfolioPhotos}
           resolvePhoto={resolvePhotoThumb}
           onSeeAll={() => router.push("/portfolio")}
         />
+
+        <RecentStripsRow />
+
+        {showTemplates ? (
+          <TemplatesRow
+            templates={templates}
+            resolveThumbnail={resolveThumbnail}
+            onSeeAll={() => router.push("/templates")}
+          />
+        ) : null}
 
         <PastEventsRow events={pastEvents} resolveCover={resolveCover} />
 
