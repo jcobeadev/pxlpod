@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { requireOptionalNativeModule } from "expo";
 import { useRouter } from "expo-router";
 import { overlayUrl, useAppContent, useEvents, useLiveEvent, usePublishedPhotos, useTemplates } from "@poplab/api";
 
@@ -21,9 +22,13 @@ import { ErrorBoundary } from "../../src/components/ErrorBoundary";
 import { usePoplabClient } from "../_layout";
 
 // expo-video is native; keep it out of the eager import graph so a build without
-// the module doesn't crash Home. It's lazy-loaded, and both the loading and the
-// error path fall back to the no-native sprite-sheet tile.
+// the module doesn't crash Home. It's lazy-loaded — but ONLY when the native
+// module is actually present. On a build that predates the module, importing it
+// throws at module-eval ("Cannot find native module 'ExpoVideo'"), which Metro
+// surfaces as a lazy-resolves-to-undefined render error the ErrorBoundary can't
+// swallow — so we gate on the module existing and fall back to the sprite tile.
 const StartSessionHeroMp4 = lazy(() => import("../../src/components/home/StartSessionHeroMp4"));
+const HAS_NATIVE_VIDEO = requireOptionalNativeModule("ExpoVideo") != null;
 
 const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
 
@@ -90,12 +95,14 @@ export default function HomeTab() {
           <LiveBanner eventTitle={liveEvent.title} onDismiss={() => setDismissedLiveEventId(liveEvent.id)} />
         ) : null}
 
-        {useVideoHero ? (
+        {useVideoHero && HAS_NATIVE_VIDEO ? (
           <ErrorBoundary fallback={<StartSessionHeroVideo onPress={() => router.push("/session")} caption={heroCaption} />}>
             <Suspense fallback={<StartSessionHeroVideo onPress={() => router.push("/session")} caption={heroCaption} />}>
               <StartSessionHeroMp4 onPress={() => router.push("/session")} caption={heroCaption} />
             </Suspense>
           </ErrorBoundary>
+        ) : useVideoHero ? (
+          <StartSessionHeroVideo onPress={() => router.push("/session")} caption={heroCaption} />
         ) : (
           <StartSessionHero onPress={() => router.push("/session")} caption={heroCaption} />
         )}
