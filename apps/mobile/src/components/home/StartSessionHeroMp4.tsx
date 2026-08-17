@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, Pressable, useWindowDimensions, View } from "react-native";
+import { AppState, StyleSheet, Pressable, useWindowDimensions, View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 
 import { Text } from "../ui";
@@ -38,6 +38,15 @@ export default function StartSessionHeroMp4({ onPress, caption }: StartSessionHe
   // here recovers it whenever the OS allows.
   useEffect(() => {
     player.play();
+  }, [player]);
+
+  // expo-video pauses when the app goes to the background and does NOT resume on
+  // its own — the tile would sit frozen after returning. Resume on foreground.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") player.play();
+    });
+    return () => sub.remove();
   }, [player]);
 
   return (
