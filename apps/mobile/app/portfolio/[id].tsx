@@ -31,10 +31,13 @@ export default function AlbumDetail() {
   const album = (albumsQuery.data ?? []).find((a) => a.id === id) ?? null;
   const photos = photosQuery.data ?? [];
 
-  // Grid uses a small transform; the full image loads on tap.
+  // Grid uses a small transform (contain = whole image + aspect + EXIF);
+  // the full image loads on tap.
   const resolveThumb = useMemo(
     () => (path: string) =>
-      client.storage.from("albums").getPublicUrl(path, { transform: { width: 500, quality: 60 } }).data.publicUrl,
+      client.storage
+        .from("albums")
+        .getPublicUrl(path, { transform: { width: 800, height: 800, resize: "contain", quality: 60 } }).data.publicUrl,
     [client],
   );
   const resolveFull = useMemo(

@@ -58,11 +58,14 @@ export default function HomeTab() {
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
     [client],
   );
-  // Small, fast-loading version for the portfolio marquee (full-size loads on
-  // tap, in the gallery). Supabase image transform — width-capped + compressed.
+  // Small, fast-loading version for the portfolio marquee. resize:"contain"
+  // keeps the whole image and its aspect ratio (and applies EXIF orientation);
+  // a plain width-only transform on this project returns a distorted image.
   const resolvePhotoThumb = useMemo(
     () => (path: string) =>
-      client.storage.from("albums").getPublicUrl(path, { transform: { width: 320, quality: 60 } }).data.publicUrl,
+      client.storage
+        .from("albums")
+        .getPublicUrl(path, { transform: { width: 600, height: 600, resize: "contain", quality: 60 } }).data.publicUrl,
     [client],
   );
 

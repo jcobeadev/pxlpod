@@ -39,7 +39,10 @@ export function AlbumEditor({
 
   const readImageSize = async (file: File): Promise<{ width: number; height: number } | null> => {
     try {
-      const bmp = await createImageBitmap(file);
+      // imageOrientation "from-image" applies EXIF rotation, so we store the
+      // DISPLAY dimensions (what the app renders) — not the raw pixel size,
+      // which can be rotated 90° and would make the app crop/size wrong.
+      const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
       const dims = { width: bmp.width, height: bmp.height };
       bmp.close();
       return dims;

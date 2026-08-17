@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Image, Modal, Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
+import { FlatList, Image, Modal, Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePublishedPhotos, type AlbumPhotoRow } from "@poplab/api";
@@ -24,11 +24,12 @@ export default function PortfolioIndex() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const client = usePoplabClient();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const photosQuery = usePublishedPhotos(client, TENANT_ID);
   const photos = photosQuery.data ?? [];
-  const [zoom, setZoom] = useState<string | null>(null);
+  // Index into `photos` of the photo open in the full-screen viewer (or null).
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -40,9 +41,12 @@ export default function PortfolioIndex() {
   }, [photosQuery]);
 
   // Grid shows a small, fast transform; tapping opens the full-resolution image.
+  // resize:"contain" preserves the whole image + aspect ratio (and EXIF).
   const resolveThumb = useMemo(
     () => (path: string) =>
-      client.storage.from("albums").getPublicUrl(path, { transform: { width: 400, quality: 60 } }).data.publicUrl,
+      client.storage
+        .from("albums")
+        .getPublicUrl(path, { transform: { width: 800, height: 800, resize: "contain", quality: 60 } }).data.publicUrl,
     [client],
   );
   const resolveFull = useMemo(
@@ -97,7 +101,7 @@ export default function PortfolioIndex() {
             {columns.map((col, ci) => (
               <View key={ci} style={{ flex: 1, gap: GAP }}>
                 {col.map(({ photo, h }) => (
-                  <Pressable key={photo.id} onPress={() => setZoom(resolveFull(photo.path))}>
+                  <Pressable key={photo.id} onPress={() => setViewerIndex(photos.findIndex((x) => x.id === photo.id))}>
                     <Image
                       source={{ uri: resolveThumb(photo.path) }}
                       style={{ width: "100%", height: h, backgroundColor: colors.surface["3"] }}
@@ -111,14 +115,36 @@ export default function PortfolioIndex() {
         )}
       </ScrollView>
 
-      <Modal visible={zoom !== null} transparent animationType="fade" onRequestClose={() => setZoom(null)}>
-        <Pressable
-          onPress={() => setZoom(null)}
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.92)", alignItems: "center", justifyContent: "center", padding: 16 }}
-        >
-          {zoom ? <Image source={{ uri: zoom }} style={{ width: "100%", height: "80%" }} resizeMode="contain" /> : null}
-          <Text style={{ color: "rgba(255,255,255,0.6)", marginTop: 16, fontSize: 13 }}>Tap to close</Text>
-        </Pressable>
+      <Modal visible={viewerIndex !== null} transparent animationType="fade" onRequestClose={() => setViewerIndex(null)}>
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <FlatList
+            data={photos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={viewerIndex ?? 0}
+            getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
+            keyExtractor={(p) => p.id}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => setViewerIndex(null)}
+                style={{ width, height, alignItems: "center", justifyContent: "center" }}
+              >
+                <Image source={{ uri: resolveFull(item.path) }} style={{ width, height: height * 0.85 }} resizeMode="contain" />
+              </Pressable>
+            )}
+          />
+          <Pressable
+            onPress={() => setViewerIndex(null)}
+            style={{ position: "absolute", top: insets.top + 8, right: 18 }}
+            hitSlop={12}
+          >
+            <Text style={{ color: "#fff", fontSize: 22 }}>✕</Text>
+          </Pressable>
+          <Text style={{ position: "absolute", bottom: insets.bottom + 20, alignSelf: "center", color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
+            Swipe ‹ › · tap to close
+          </Text>
+        </View>
       </Modal>
     </View>
   );
