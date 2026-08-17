@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, Image, Pressable, View } from "react-native";
 import type { AlbumPhotoRow } from "@poplab/api";
 
@@ -12,23 +12,33 @@ export interface PortfolioMarqueeProps {
   onSeeAll: () => void;
 }
 
-const ITEM_W = 132;
-const ITEM_H = 176;
+const ITEM_H = 176; // fixed height; width follows each photo's aspect ratio
+const MIN_W = 90;
+const MAX_W = 280;
 const GAP = 10;
 const SPEED = 42; // px per second
 
 /**
  * "Portfolio" — an auto-scrolling marquee of real photos from the operator's
- * published albums (their past pop-ups). It drifts continuously so the home
- * screen feels alive; "See all" opens the full gallery. Hidden when there are
- * no published photos. Pure RN Animated (native driver) — no extra dependency.
+ * published albums. Each photo keeps its aspect ratio (fixed height, width from
+ * the stored w/h) so nothing is cropped, like a film strip. "See all" opens the
+ * full gallery. Hidden when there are no published photos. Pure RN Animated.
  */
 export function PortfolioMarquee({ photos, resolvePhoto, onSeeAll }: PortfolioMarqueeProps) {
   const x = useRef(new Animated.Value(0)).current;
 
-  // One "lane" is the full set laid end to end; we render it twice and slide by
-  // exactly one lane width, then loop, so the seam is invisible.
-  const laneWidth = photos.length * (ITEM_W + GAP);
+  // Precompute each photo's display width from its aspect ratio.
+  const items = useMemo(
+    () =>
+      photos.map((p) => {
+        const aspect = p.width && p.height ? p.width / p.height : 1;
+        const width = Math.min(MAX_W, Math.max(MIN_W, Math.round(ITEM_H * aspect)));
+        return { photo: p, width };
+      }),
+    [photos],
+  );
+
+  const laneWidth = useMemo(() => items.reduce((sum, it) => sum + it.width + GAP, 0), [items]);
 
   useEffect(() => {
     if (laneWidth <= 0) return;
@@ -48,11 +58,11 @@ export function PortfolioMarquee({ photos, resolvePhoto, onSeeAll }: PortfolioMa
   if (photos.length === 0) return null;
 
   const lane = (keyPrefix: string) =>
-    photos.map((p, i) => (
+    items.map((it, i) => (
       <Image
-        key={`${keyPrefix}-${p.id ?? i}`}
-        source={{ uri: resolvePhoto(p.path) }}
-        style={{ width: ITEM_W, height: ITEM_H, marginRight: GAP, backgroundColor: colors.surface["3"] }}
+        key={`${keyPrefix}-${it.photo.id ?? i}`}
+        source={{ uri: resolvePhoto(it.photo.path) }}
+        style={{ width: it.width, height: ITEM_H, marginRight: GAP, backgroundColor: colors.surface["3"] }}
         resizeMode="cover"
       />
     ));
