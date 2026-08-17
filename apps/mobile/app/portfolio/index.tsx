@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { FlatList, Image, Modal, Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePublishedPhotos, type AlbumPhotoRow } from "@poplab/api";
@@ -13,6 +13,23 @@ const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? "";
 const H_PAD = 12;
 const GAP = 8;
 const COLS = 2;
+
+/** One full-screen page in the swipe viewer, with a spinner until it loads. */
+function ViewerImage({ uri, width, height, onClose }: { uri: string; width: number; height: number; onClose: () => void }) {
+  const [loading, setLoading] = useState(true);
+  return (
+    <Pressable onPress={onClose} style={{ width, height, alignItems: "center", justifyContent: "center" }}>
+      <Image
+        source={{ uri }}
+        style={{ width, height: height * 0.85 }}
+        resizeMode="contain"
+        onLoadStart={() => setLoading(true)}
+        onLoadEnd={() => setLoading(false)}
+      />
+      {loading ? <ActivityIndicator size="large" color="#fff" style={{ position: "absolute" }} /> : null}
+    </Pressable>
+  );
+}
 
 /**
  * Portfolio gallery — every photo across the operator's published albums,
@@ -53,6 +70,13 @@ export default function PortfolioIndex() {
     () => (path: string) => client.storage.from("albums").getPublicUrl(path).data.publicUrl,
     [client],
   );
+
+  // Warm the cache: prefetch the full-resolution photos in the background so the
+  // viewer opens instantly and re-opens are fast. Image.prefetch checks the
+  // cache first, so repeat visits don't re-download.
+  useEffect(() => {
+    for (const p of photos) void Image.prefetch(resolveFull(p.path)).catch(() => {});
+  }, [photos, resolveFull]);
 
   const colW = (width - H_PAD * 2 - GAP * (COLS - 1)) / COLS;
 
@@ -126,12 +150,7 @@ export default function PortfolioIndex() {
             getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
             keyExtractor={(p) => p.id}
             renderItem={({ item }) => (
-              <Pressable
-                onPress={() => setViewerIndex(null)}
-                style={{ width, height, alignItems: "center", justifyContent: "center" }}
-              >
-                <Image source={{ uri: resolveFull(item.path) }} style={{ width, height: height * 0.85 }} resizeMode="contain" />
-              </Pressable>
+              <ViewerImage uri={resolveFull(item.path)} width={width} height={height} onClose={() => setViewerIndex(null)} />
             )}
           />
           <Pressable
