@@ -34,7 +34,8 @@
           }
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-video"
     ],
     "ios": {
       "supportsTablet": false,
