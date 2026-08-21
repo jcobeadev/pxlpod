@@ -16,7 +16,11 @@
         {
           "savePhotosPermissionTextIOS": "PxlPod saves your finished strip to your photos.",
           "photosPermissionTextIOS": "PxlPod needs access to save your photo strip.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": [
+            "photo",
+            "video"
+          ]
         }
       ],
       [
