@@ -55,10 +55,6 @@ export default function PrivacyPage() {
               <strong>Booking inquiries</strong> — if you use “Book us,” we collect the details you enter
               (name, email and/or phone, and event details) so we can reply with a quote.
             </li>
-            <li>
-              <strong>Approximate location</strong> — only if you allow it, and only to check whether a pop-up
-              is running near you. It is used on-device and not stored by us.
-            </li>
           </ul>
         </Section>
 
@@ -91,7 +87,7 @@ export default function PrivacyPage() {
         <Section title="Your choices">
           <ul className="list-disc pl-5 space-y-2">
             <li>Delete every strip the app holds at any time from the More screen.</li>
-            <li>Revoke camera, photos, or location permission in your phone’s Settings.</li>
+            <li>Revoke camera or photos permission in your phone’s Settings.</li>
             <li>
               Ask us to access or delete a booking inquiry, or a strip you shared or sent to print, by emailing{" "}
               <a className="underline" href={`mailto:${CONTACT}`}>{CONTACT}</a>.
